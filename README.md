@@ -10,39 +10,31 @@ The engine is [gufo](https://github.com/neuhaus/gufo) (MIT), forked with a MiMo 
 
 Two AMD Ryzen AI MAX+ 395 boards (gfx1151, 128 GB unified memory each), Ubuntu 24.04, kernel 7.0.0-34, ROCm 7.2.4, transport is TB4 RDMA. The boards are not identical: one has 2.25 GiB less usable RAM, and that one decides the context size below. Model is MiMo-V2.6-Flash-RL MXFP4 with the Q8_0 MTP draft head (d=7).
 
-**Cold prefill**, one stream, fresh prompt each rung:
+All of it, one table:
 
-| prompt tokens | wall | per token | rate |
-|---:|---:|---:|---:|
-| 8,314 | 11.7 s | 1.41 ms | 711 tok/s |
-| 18,513 | 25.4 s | 1.37 ms | 729 tok/s |
-| 36,712 | 58.0 s | 1.58 ms | 633 tok/s |
-| 79,911 | 186.2 s | 2.33 ms | 429 tok/s |
-| 141,513 | 408.1 s | 2.88 ms | 347 tok/s |
-| 192,910 | 692.0 s | 3.59 ms | 288 tok/s |
+| test | load | wall | rate | notes |
+|---|---|---:|---:|---|
+| cold prefill | 8,314 tokens | 11.7 s | 711 tok/s | |
+| cold prefill | 18,513 tokens | 25.4 s | 729 tok/s | peak of the curve |
+| cold prefill | 36,712 tokens | 58.0 s | 633 tok/s | |
+| cold prefill | 79,911 tokens | 186.2 s | 429 tok/s | |
+| cold prefill | 141,513 tokens | 408.1 s | 347 tok/s | |
+| cold prefill | 192,910 tokens | 692.0 s | 288 tok/s | 40% of peak |
+| prefill, extending an existing prefix | 49,550 new tokens on a 143K prefix | 271.7 s | | only the delta is computed |
+| same prompt, RAM snapshot (L1) | 79,911 tokens | 1.2 s | | 155x; restore 0.17 s |
+| same prompt after a restart (L2 disk) | 68,911 tokens | 2.2 s | | 60x; restore 1.29 s |
+| same prompt after a restart (L2 disk) | 141,513 tokens | 25.5 s | | 24x; restore 4.76 s |
+| same prompt after a restart (L2 disk) | 192,910 tokens | 7.8 s | | 89x; restore 3.76 s |
+| decode, one stream | | | 34.7 tok/s | |
+| decode, six counting streams | | | 92.6 tok/s | 92.6 / 92.5 / 92.1 across three runs |
+| decode, six mixed streams | | | 55.0 tok/s | after a drain, see below |
+| prefill, six at once | 173,604 tokens (6 x 28.9K) | 363.7 s | 477 tok/s | 75% of the single-stream rate at that depth |
+| ten-minute soak | six streams back to back | | 73.0-92.8 tok/s | 29/29 rounds clean, GTT +82 MB |
+| memory | 6x200K | | peak 106,999 MB GTT | 6.3 GB free at the worst moment; the wall is ~109.7 GB |
 
-18K is the peak. After that it decays all the way down, because 12 of the 48 layers are full attention and the other 36 only see a 128-token sliding window.
+"Cold" means the prompt has never been seen by the process, so nothing is cached. Every restore figure is the engine's `cache_restore_ms`; every rate is client wall clock against `http://127.0.0.1:8080`. The prefill curve peaks at 18K and decays from there: 12 of the 48 layers are full attention and pay for the whole context, the other 36 only see 128 tokens of history. Every needle I buried in these prompts came back correct, through all of these paths. One caveat on the concurrency rows: they only mean anything after a drain. A mixed six-way taken right after another cohort reads 21 t/s, and right after a cold 59K prefill it reads 15.8 t/s, because it is queueing behind resident sessions.
 
-**Same prompt again.** The engine keeps prefix snapshots in RAM (L1) and on disk (L2). Only the disk one survives a restart:
-
-| prompt tokens | source | wall | of which restore | vs cold |
-|---:|---|---:|---:|---:|
-| 79,911 | L1 RAM | 1.2 s | 0.17 s | 155x |
-| 68,911 | L2 disk | 2.2 s | 1.29 s | 60x |
-| 141,513 | L2 disk | 25.5 s | 4.76 s | 24x |
-| 192,910 | L2 disk | 7.8 s | 3.76 s | 89x |
-
-And if a new request extends a prefix that is already in the cache, only the new tokens get prefilled: a 195K request on top of an existing 143K prefix prefilled 49,550 tokens, 271.7 s instead of 692 s. Every needle I buried in these prompts came back correct.
-
-**Decode.** 34.7 t/s on a single stream. 92 t/s aggregate over six concurrent counting streams (92.6 / 92.5 / 92.1 across three runs). A batch of six different tasks is much slower, 55.0 t/s, because MTP acceptance depends on what you're generating.
-
-**Concurrent prefill.** Six requests at once, about 29K tokens each: all six completed, 173,604 tokens in 363.7 s, so 477 tok/s aggregate. That's 75% of the single-stream rate at that depth.
-
-**Ten minutes of back-to-back six-way cohorts**: 29/29 rounds clean, 73.0-92.8 t/s, and GTT moved 82 MB in total (106,397 to 106,479 MB). No leak.
-
-**Memory.** Peak GTT over the whole test was 106,999 MB, with 6.3 GB of free RAM at the tightest point. Allocations start dying around 109.7 GB, which is exactly why the context is 200K and not 256K: six 256K sessions need about 111 GB and the load OOMs the host.
-
-Full tables, the failed configs, and how to read the numbers: [docs/BENCHMARKS.md](docs/BENCHMARKS.md).
+Full tables with per-case engine evidence, the snapshot sizes, and the configs that lost: [docs/BENCHMARKS.md](docs/BENCHMARKS.md).
 
 ## What's mine and what's gufo's
 

@@ -16,38 +16,50 @@ Every number in this file came out of the scripts in `run/bench/`, against the s
 
 How to read the two kinds of numbers: client wall is what a caller feels (HTTP plus queueing plus the MTP decode loop). The engine's view of every request is in `$HOME/logs/mimo-rank0.log` (`prompt_tokens= prefill_tokens= generated_tokens= cache= cached_tokens= cache_restore_ms= ttft_ms= prefill_tps= decode_tps=`) and in the response's `usage.gufo` block. Every "restore" number below is the engine's `cache_restore_ms`; every rate is client wall. The prompts are Chinese filler with a needle planted at 60% depth.
 
-## Cold prefill ladder
+## Everything, one table
 
-Single stream, cold: each rung uses a filler template that has never been used before, so nothing is cached. Source: `run/bench/prod-full-test.sh` phase D. The `prompt tokens` column is the engine's `usage.prompt_tokens`, not the script's estimate.
+| test | load | wall | rate | notes |
+|---|---|---:|---:|---|
+| cold prefill | 8,314 tokens | 11.7 s | 711 tok/s | 1.41 ms/token |
+| cold prefill | 18,513 tokens | 25.4 s | **729 tok/s** | peak of the curve; 1.37 ms/token |
+| cold prefill | 36,712 tokens | 58.0 s | 633 tok/s | 1.58 ms/token |
+| cold prefill | 79,911 tokens | 186.2 s | 429 tok/s | 2.33 ms/token |
+| cold prefill | 141,513 tokens | 408.1 s | 347 tok/s | 2.88 ms/token |
+| cold prefill | 192,910 tokens | 692.0 s | 288 tok/s | 3.59 ms/token; 40% of peak |
+| prefill, extending an existing prefix | 49,550 new tokens on a 143K prefix | 271.7 s | | only the delta is computed |
+| same prompt, L1 RAM | 79,911 tokens | **1.2 s** | | 155x vs cold; restore 0.17 s |
+| same prompt, L2 disk, after a restart | 68,911 tokens | **2.2 s** | | 60x; restore 1.29 s |
+| same prompt, L2 disk, after a restart | 141,513 tokens | **25.5 s** | | 24x; restore 4.76 s |
+| same prompt, L2 disk, after a restart | 192,910 tokens | **7.8 s** | | 89x; restore 3.76 s |
+| decode, single stream | | | 34.7 tok/s | mixed content, steady state |
+| decode, six counting streams | | | 92.6 / 92.5 / 92.1 tok/s | three consecutive runs |
+| decode, six mixed streams | | | 55.0 tok/s | after a drain; see the Decode section |
+| decode, six counting streams (previous 8x98304 shape) | | | 91.7 / 91.4 / 91.1 tok/s | for reference |
+| prefill, six at once | 173,604 tokens (6 x 28.9K) | 363.7 s | 477 tok/s | 75% of the single-stream rate at that depth |
+| ten-minute soak | six streams back to back | | 73.0-92.8 tok/s | 29/29 rounds clean; GTT +82 MB |
+| memory envelope | 6x200K | | GTT peak 106,999 MB | min free RAM 7.8 GB (rank0) / 6.3 GB (rank1) |
 
-| prompt tokens | wall | per token | rate |
-|---:|---:|---:|---:|
-| 8,314 | 11.7 s | 1.41 ms | 711 tok/s |
-| 18,513 | 25.4 s | 1.37 ms | **729 tok/s** |
-| 36,712 | 58.0 s | 1.58 ms | 633 tok/s |
-| 79,911 | 186.2 s | 2.33 ms | 429 tok/s |
-| 141,513 | 408.1 s | 2.88 ms | 347 tok/s |
-| 192,910 | 692.0 s | 3.59 ms | 288 tok/s |
+"Cold" means the prompt has never been seen by the process, so nothing is cached. The sections below are the same numbers with the evidence behind them, plus the things that didn't fit in a table.
 
-The curve peaks at the 16K rung and decays from there: 195K runs at 288 tok/s, 40% of peak, with per-token cost up 2.5x. This is the full-attention bill, not a cache effect. The layers that see the whole context dominate the attention budget, and their per-call cost grows superlinearly with depth (harness: 1.5 ms per call at 17.5K, 5.3 ms at 35K, 10.5 ms at 70K). A separate acceptance run at 168.9K (82% of the window) took 503.8 s with a needle HIT and GTT flat at 104 GB the whole way. One rung overshot: 15,000 segments of a different template made 243,910 tokens and the engine refused it with `context_length_exceeded`. That is the guardrail working, not a failure ([PITFALLS #17](PITFALLS.md)).
+## Cold prefill
+
+Single stream, cold, one fresh filler template per rung, so nothing is cached. Source: `run/bench/prod-full-test.sh` phase D. The `load` column is the engine's `usage.prompt_tokens`, not the script's estimate.
+
+The curve peaks at the 16K rung and decays from there: 195K runs at 288 tok/s, 40% of peak, with per-token cost up 2.5x (1.37 ms to 3.59 ms). This is the full-attention bill, not a cache effect. The layers that see the whole context dominate the attention budget, and their per-call cost grows superlinearly with depth: the harness measures 1.5 ms per call at 17.5K, 5.3 ms at 35K, 10.5 ms at 70K.
+
+One more data point that isn't in the table: a separate acceptance run at 168.9K (82% of the window) took 503.8 s with a needle HIT and GTT flat at 104 GB the whole way.
+
+One rung overshot: 15,000 segments of a different template made 243,910 tokens and the engine refused it with `context_length_exceeded`. That is the guardrail working, not a failure ([PITFALLS #17](PITFALLS.md)).
 
 ## Prefix continuation
 
 The engine keeps two continuation tiers: **L1**, an in-process RAM snapshot pool (`--cache-ram-bytes`), and **L2**, a restart-safe disk store (`--cache-disk`). Procedure: ask a cold prompt, let the snapshot commit, restart the pair, ask the identical prompt again. The L1 row is a replay inside the same process; every L2 row is a full restart with only the disk cache left.
 
-| case | prompt tokens | cold | warm | restore | speed-up |
-|---|---:|---:|---:|---:|---:|
-| L1 RAM 64K | 79,911 | 186.2 s | **1.2 s** | 0.17 s | 155x |
-| L2 disk 68.9K | 68,911 | 131.8 s | **2.2 s** | 1.29 s | 60x |
-| L2 disk 141K | 141,513 | 408.1 s | **25.5 s** | 4.76 s | 24x |
-| L2 disk 193K | 192,910 | 692.0 s | **7.8 s** | 3.76 s | **89x** |
-| incremental | 195K request on an existing 143K prefix | — | only 49,550 tokens prefilled, 271.7 s | — | — |
-
 Engine evidence for each row, from `$HOME/logs/mimo-rank0.log`:
 
 - L1: `cached_tokens=79911 prefill_tokens=0 restore=167.8ms`
 - 68.9K: `cache=disk cached_tokens=68911 prefill_tokens=0 cache_restore_ms=1292.1 ttft_ms=1305.9`
-- 141K: `cache=disk cached_tokens=141513 cache_restore_ms=3038.3`, needle HIT (first pass). The 25.5 s row above is a later re-check on the same machine with a 4.76 s restore, and after rank1's store moved to `/mnt/data1t/cache-disk` the same prefix restored in `cache_restore_ms=3165.6`. This prefix has three restored measurements and they disagree, which is why the table quotes the slow one.
+- 141K: `cache=disk cached_tokens=141513 cache_restore_ms=3038.3`, needle HIT (first pass). The 25.5 s row in the table is a later re-check on the same machine with a 4.76 s restore, and after rank1's store moved to `/mnt/data1t/cache-disk` the same prefix restored in `cache_restore_ms=3165.6`. This prefix has three restored measurements and they disagree, which is why the table quotes the slow one.
 - 193K: `cached_tokens=192910`, restore 3.76 s, needle HIT
 
 First proof of the L2 path at all (7.8K prefix, from `run/bench/l2-cache-test.sh`): cold 11.24 s, then after restarting both ranks, `cache=disk cached_tokens=7764 prefill_tokens=0 cache_restore_ms=185.3 ttft_ms=190.4`, answer byte-identical, snapshot 118 MB on each host.
@@ -65,22 +77,13 @@ One thing that cost me an afternoon: a snapshot is not usable the moment the fil
 
 ## Decode
 
-MTP speculative decoding (`d = 7`) is active in all of these. Content matters a lot here: the aggregate rate depends on what the sessions are asked to do, because MTP acceptance drives how many tokens come out of one weight-streaming cycle. So every row names the content.
-
-| scenario | aggregate | notes |
-|---|---:|---|
-| single stream | 34.7 t/s | mixed content, steady state |
-| six-way counting, run 1 | 92.6 t/s | three consecutive cohorts of the same counting prompt |
-| six-way counting, run 2 | 92.5 t/s | |
-| six-way counting, run 3 | 92.1 t/s | |
-| mixed six-way cohort | 55.0 t/s | six different task classes (count / list / code / prose / math / recall) |
-| older 8x98304 config | 91.7 / 91.4 / 91.1 t/s | the previous production shape, for reference |
+MTP speculative decoding (`d = 7`) is active in all of these. Content matters a lot here: the aggregate rate depends on what the sessions are asked to do, because MTP acceptance drives how many tokens come out of one weight-streaming cycle. So every decode row in the table names the content.
 
 The mixed figure has to be measured after a drain. Taken right after another six-way cohort it reads **21 t/s**, and taken immediately after the 58.7K cold prefill it reads **15.8 t/s**. Both of those are queueing behind resident sessions, not decode (see Measurement traps).
 
 ## Concurrent prefill
 
-`run/bench/prod-full-test.sh` phase F: six requests fired at once, each ~1,800 filler segments with `max_tokens=1` and a needle at 50% depth. The run measured **173,604 prompt tokens in total (~28.9K each)**, **all six completed**, wall 363.7 s, so **477 tok/s aggregate**. Single-stream rate at that depth is 633 tok/s (the 32K rung), so this is **75% concurrency efficiency at 6x**, in the production configuration and at the production session count.
+`run/bench/prod-full-test.sh` phase F: six requests fired at once, each ~1,800 filler segments with `max_tokens=1` and a needle at 50% depth. All six completed, 173,604 prompt tokens in total (~28.9K each), wall 363.7 s, so 477 tok/s aggregate. Single-stream rate at that depth is 633 tok/s (the 32K rung), so this is 75% concurrency efficiency at 6x, in the production configuration and at the production session count.
 
 ## Ten-minute soak
 
