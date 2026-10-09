@@ -1,5 +1,7 @@
 # gufo-tp2-mimo26
 
+[English](README.md)
+
 把 MiMo-V2.6-Flash-RL 拆到两台 AMD Strix Halo 上跑。
 
 模型是 309B 的 MoE，每个 token 激活 15B（专家是 MXFP4）。单台 128 GB 差得远，两台刚刚够——"刚刚够"就是这个仓库的全部主题。现在它同时跑六个 200K token 的会话；冷预填从短提示的 711 tok/s 一路掉到 195K 时的 288 tok/s；服务重启之后，见过的前缀直接从磁盘快照里回来：冷跑要 692 秒的 193K 提示词，7.8 秒就能接着用。

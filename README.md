@@ -1,5 +1,7 @@
 # gufo-tp2-mimo26
 
+[中文文档](README.zh-CN.md)
+
 Running MiMo-V2.6-Flash-RL across two AMD Strix Halo boxes.
 
 The model is a 309B mixture-of-experts with 15B active per token (MXFP4 experts). It doesn't come close to fitting on one 128 GB box. On two it just barely does, and most of what I did over the last few weeks is about that "barely". Right now it serves six 200K-token sessions at once; cold prefill goes from 711 tok/s on a short prompt to 288 tok/s at 195K; and if I restart the server, a prefix it has seen before comes straight from a disk snapshot, so the 193K prompt that costs 692 s cold comes back in 7.8 s.
