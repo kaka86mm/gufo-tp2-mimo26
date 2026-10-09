@@ -1,0 +1,42 @@
+# mimo-supervisor.service — the lifecycle owner for the TP2 pair.
+#
+# The supervisor owns the lifecycle: GTT runaway guard (a rank's RSS misses GTT,
+# so the OOM killer never sees the pinned pages — see docs/PITFALLS.md),
+# peer-vanish kill (a rank whose peer is gone would otherwise spin instead of
+# failing), and restore-from-rollback (pair down while the peer answers ->
+# deploy/restore-prod.sh puts the pinned binary back and starts both ranks).
+# systemd is what makes that survive reboots.
+#
+# Install: copy to /etc/systemd/system/ on rank0, replace __REPO__ with the
+# checkout path on that host (e.g. /opt/gufo-tp2-mimo26), then
+# systemctl enable --now mimo-supervisor
+# The argument is the GTT limit in GB; docs/CONFIGURATION.md, "The supervisor",
+# explains why 118. Test and deploy windows suspend it by dropping the
+# /tmp/mimo-no-supervise marker, which ExecStop must not sweep away.
+
+[Unit]
+Description=gufo MiMo-V2.6-Flash-RL TP2 supervisor (rank0)
+Documentation=file:__REPO__/docs/CONFIGURATION.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=matri
+WorkingDirectory=/home/matri
+# The supervisor owns the lifecycle: GTT runaway guard, peer-vanish kill, and
+# restore-from-rollback when the pair is down but the peer answers.
+ExecStart=/bin/bash __REPO__/deploy/mimo-supervisor.sh 118
+# Stop serving for real, not just the supervisor: without an ExecStop the two
+# engine ranks keep running (and holding ~110 GB of GTT) after a stop.
+ExecStop=/bin/bash __REPO__/deploy/mimo-stop.sh
+Restart=always
+RestartSec=20
+TimeoutStopSec=60
+# The supervisor appends its own log to $HOME/logs/mimo-supervisor.log; the
+# journal is a second copy so a wrong HOME can never silence it.
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
