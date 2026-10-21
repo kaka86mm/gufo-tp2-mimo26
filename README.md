@@ -68,6 +68,7 @@ docs/   CONFIGURATION.md       every flag and env var, its value here, and why
         OPTIMIZATIONS.md       engine work: what shipped and what lost
         BENCHMARKS.md          full tables, failed configs, methodology
         PITFALLS.md            everything that bit me
+        REVIEW.md              where the build stands, and what is left
 ```
 
 ## Running it
