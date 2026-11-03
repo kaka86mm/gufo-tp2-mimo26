@@ -15,7 +15,7 @@ REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 # Logs live under $HOME/logs so they survive reboots; /tmp names stay
 # as symlinks because the supervisor and the gate scripts grep those paths.
 LOGDIR=${MIMO_LOG_DIR:-$HOME/logs}
-mkdir -p "$LOGDIR"
+mkdir -p "$LOGDIR" "$CACHE_DIR_R0"
 # keep the legacy /tmp names resolving to the persistent logs
 ln -sf "$LOGDIR/mimo-rank0.log" /tmp/mimo-rank0.log
 ln -sf "$LOGDIR/mimo-rank1.log" /tmp/mimo-rank1.log
@@ -94,7 +94,7 @@ done
 ss -tln | grep -q 18525 || { echo "!! rank0 bootstrap port never came up:"; tail -20 $LOGDIR/mimo-rank0.log; exit 1; }
 
 echo "== rank1 ($RANK1) =="
-ssh -o BatchMode=yes $RANK1 "sg render -c 'mkdir -p "$LOGDIR"; setsid nohup env GUFO_NO_GRAPH=1 GUFO_MIMO_DENSE_SC=$DENSE_SIDECAR GPU_MAX_HW_QUEUES=1 GUFO_AR_F16=1 GUFO_TOOLS_FREEFORM=1 GUFO_MTP_COST_SCALE=0.80 GUFO_MTP_ACCEPT_DECAY=0.9 GUFO_MTP_RETRY_TOKENS=4 HIP_VISIBLE_DEVICES=0 LD_LIBRARY_PATH=/opt/rocm-7.2.4/lib:/home/matri/gufo-libs \
+ssh -o BatchMode=yes $RANK1 "sg render -c 'mkdir -p "$LOGDIR" "$CACHE_DIR_R1"; setsid nohup env GUFO_NO_GRAPH=1 GUFO_MIMO_DENSE_SC=$DENSE_SIDECAR GPU_MAX_HW_QUEUES=1 GUFO_AR_F16=1 GUFO_TOOLS_FREEFORM=1 GUFO_MTP_COST_SCALE=0.80 GUFO_MTP_ACCEPT_DECAY=0.9 GUFO_MTP_RETRY_TOKENS=4 HIP_VISIBLE_DEVICES=0 LD_LIBRARY_PATH=/opt/rocm-7.2.4/lib:/home/matri/gufo-libs \
   $BIN serve llm \
   --model $MODEL \
   --speculative mtp --mtp-model $MTP \
