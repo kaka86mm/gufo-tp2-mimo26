@@ -112,7 +112,7 @@ GTT ~ 89.7 GB fixed (weights + workspace + MTP)
 
 Full list in [docs/PITFALLS.md](docs/PITFALLS.md). Three that cost me the most time:
 
-- A symlinked cache directory fails the whole load with `TP disk cache directory: Not a directory`, and the other rank follows it down with `tp_pair_lost`.
+- A symlinked cache directory fails the whole load with `TP disk cache directory: Not a directory` or `continuation disk directory is not a private owned directory`; the other rank follows it down with `tp_pair_lost`. Use a real directory owned by the engine user.
 - `--cache-disk-staging-bytes` smaller than your snapshots kills the disk cache silently. The directory just stops growing and requests report `cache_miss_reason=no_checkpoint`, which reads like "no checkpoint for this prefix" instead of "your snapshot was refused". I shipped 256 MiB for a while and thought the cache was working.
 - Readiness is not `event=listening`. That line shows up before the KV for a 200K context is allocated, and rank0 keeps answering `/health` for about a minute after its peer is gone. The restore path here waits for health 200 and a live peer process, because a restore that reports success with rank1 dead is worse than one that reports failure.
 
