@@ -105,7 +105,7 @@ GTT ~ 89.7 GB 固定（权重 + 工作区 + MTP）
 
 完整清单在 [docs/PITFALLS.md](docs/PITFALLS.md)。最花时间的三条：
 
-- 缓存目录是符号链接会让整个加载失败（`TP disk cache directory: Not a directory`），另一台跟着以 `tp_pair_lost` 退出。
+- 缓存目录是符号链接会让整个加载失败（`TP disk cache directory: Not a directory` 或 `continuation disk directory is not a private owned directory`），另一台跟着以 `tp_pair_lost` 退出。必须用引擎用户拥有的真实目录。
 - `--cache-disk-staging-bytes` 小于快照大小会静默杀掉磁盘缓存：目录只是不再增长，请求报告 `cache_miss_reason=no_checkpoint`，读起来像"这个前缀没有检查点"，而不是"你的快照被拒了"。我用 256 MiB 跑了一段时间，还以为缓存是好的。
 - 就绪不等于 `event=listening`。那行日志在 200K 的 KV 分配完成之前就会打出来，而且 rank0 在对端已经没了之后还会继续答 `/health` 大约一分钟。这里的恢复路径等的是 health 200 **且**对端进程活着——一次"报告成功但 rank1 已经死了"的恢复，比"报告失败"糟糕得多。
 
