@@ -69,6 +69,9 @@ docs/   CONFIGURATION.md       每个 flag / 环境变量：这里的值、默�
         BENCHMARKS.md          全部数据、失败配置、方法学
         PITFALLS.md            咬过我的每一条
         REVIEW.md              现状、死杠杆、下一步
+engine/ MIMO26.md            固定构建、模型文件、sidecar、运行时
+        src/                 gufo 0.15.0 + mimo2 移植（与 gufo-mimo26 同一棵树）
+        tools/               mimo2_requant_dense.py
 ```
 
 ## 跑起来
