@@ -58,6 +58,9 @@ embeds source paths — but it is the same code. Keep a pinned copy on both host
 cp ~/gufo-mimo2-bin ~/gufo-mimo2-bin.port15
 ```
 
+Copy the same file to both ranks and compare `md5sum`. A different binary on one
+rank fails the TP handshake.
+
 ## 2. Model files
 
 The trunk and the MTP draft are MIT-licensed and come from
