@@ -1,0 +1,386 @@
+{
+  "artifactType": "model-bench-table",
+  "fingerprint": {
+    "canonical": {
+      "cppStandard": "C++20",
+      "cpuArchitecture": "x86_64",
+      "cpuLogicalCores": 32,
+      "cpuModel": "AMD RYZEN AI MAX+ 395 w/ Radeon 8060S",
+      "cpuPhysicalCores": 16,
+      "cxxCompiler": "GCC 15.3.0",
+      "gpuArchitecture": "gfx1151",
+      "gpuComputeUnits": 20,
+      "gpuDriver": "amdgpu",
+      "gpuName": "AMD Radeon 8060S Graphics",
+      "gpuPciId": "1002:1586",
+      "kernelRelease": "7.1.8",
+      "memoryTotalBytes": 134309883904,
+      "memoryType": "LPDDR5X (Unified)",
+      "rocmVersion": "7.2.3",
+      "schemaVersion": "1.0.0"
+    },
+    "fingerprintId": "46337fb568b92fb76472ec90a0af584eb7d7ae401f9878d8d18b09762e7c4caa",
+    "schemaVersion": "1.0.0"
+  },
+  "measuredOn": "2026-09-23",
+  "mode": "mtp",
+  "model": {
+    "id": "Qwen3.8-Flash-Next",
+    "variant": null
+  },
+  "notes": [
+    "llama.cpp: llama-server version: 0.4.1-dev (build 11069, commit 6fcaa16f)",
+    "pp2048/tg128, greedy, thinking off. Depth is a cached conversation prefix with an eight-token reply; actual cache/prefill/output counts are retained per row.",
+    "Only 65536/131072 refreshed on 2026-09-23 UTC; other rows retain their September 22 measurements. Per-row commands and dates identify both sets.",
+    "One accepted pp2048/tg128 sample per workload/depth. Token-count calibration attempts are excluded from the published rates.",
+    "The two 131072 workloads share one warmed server; each resets to the prefix before measurement and independently validates cache_n and prompt_n.",
+    "Isolated 120 GiB reference cgroup, no swap, 3 GiB host memory floor. Prefix setup and accepted timed requests had no disk reads or major page faults."
+  ],
+  "referenceName": "llama.cpp",
+  "rows": {
+    "0": {
+      "acceptance": 50.0,
+      "acceptance_sd": null,
+      "accepted_per_step": 1.46,
+      "accepted_per_step_sd": null,
+      "command": "llama-server-mtp -m Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf -c 35456 -np 1 --port 35455 --host 127.0.0.1 --alias bench -ngl 999 -fa on --cache-reuse 0 --jinja --reasoning off --cache-ram 0 --spec-type draft-mtp --spec-draft-model mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf --spec-draft-ngl 999",
+      "counts": [
+        {
+          "cache_n": 0,
+          "draft_n": 152,
+          "draft_n_accepted": 76,
+          "predicted_n": 128,
+          "prompt_n": 2040
+        }
+      ],
+      "measuredOn": "2026-09-22",
+      "pp": 460.85,
+      "pp_sd": null,
+      "samples": 1,
+      "source": {
+        "buildMode": "nix-release",
+        "dirty": true,
+        "revision": "ff539ca5a1b321c917dbed2f19a868a17e1383f7"
+      },
+      "tg": 31.73,
+      "tg_sd": null
+    },
+    "12288": {
+      "acceptance": 59.56,
+      "acceptance_sd": null,
+      "accepted_per_step": 1.72,
+      "accepted_per_step_sd": null,
+      "command": "llama-server-mtp -m Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf -c 35456 -np 1 --port 35455 --host 127.0.0.1 --alias bench -ngl 999 -fa on --cache-reuse 0 --jinja --reasoning off --cache-ram 0 --spec-type draft-mtp --spec-draft-model mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf --spec-draft-ngl 999",
+      "counts": [
+        {
+          "cache_n": 12249,
+          "draft_n": 136,
+          "draft_n_accepted": 81,
+          "predicted_n": 128,
+          "prompt_n": 2047
+        }
+      ],
+      "measuredOn": "2026-09-22",
+      "pp": 363.44,
+      "pp_sd": null,
+      "samples": 1,
+      "source": {
+        "buildMode": "nix-release",
+        "dirty": true,
+        "revision": "ff539ca5a1b321c917dbed2f19a868a17e1383f7"
+      },
+      "tg": 32.32,
+      "tg_sd": null
+    },
+    "131072": {
+      "acceptance": 53.1,
+      "acceptance_sd": null,
+      "accepted_per_step": 1.51,
+      "accepted_per_step_sd": null,
+      "command": "llama-server -m Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf -c 133760 -np 1 --port 49849 --host 127.0.0.1 --alias bench -ngl 999 -fa on --cache-reuse 0 --jinja --reasoning off --cache-ram 0 --spec-type draft-mtp --spec-draft-model mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf --spec-draft-ngl 999",
+      "counts": [
+        {
+          "cache_n": 131056,
+          "completion_sha256": "bfbdb5fa64b5ec03080959a37ea970f113e9a5a2ba726752a7ecf9fe623ac77c",
+          "draft_n": 145,
+          "draft_n_accepted": 77,
+          "predicted_n": 128,
+          "prompt_n": 2048
+        }
+      ],
+      "measuredOn": "2026-09-23",
+      "pp": 134.66,
+      "pp_sd": null,
+      "resourceControl": {
+        "hostAvailableFloorGiB": 3,
+        "hostMemoryGuardTriggered": false,
+        "memoryMaxGiB": 120,
+        "minimumHostAvailableGiB": 4.854,
+        "minimumHostAvailableGiBByPhase": {
+          "measured": 4.854,
+          "prefix": 5.197,
+          "startup": 7.364,
+          "warmup": 7.192
+        },
+        "requests": [
+          {
+            "majorFaults": 0,
+            "phase": "prefix",
+            "readBytes": 0,
+            "wallSeconds": 610.444
+          },
+          {
+            "majorFaults": 0,
+            "phase": "measured",
+            "readBytes": 0,
+            "wallSeconds": 24.083
+          }
+        ],
+        "systemd": "Result=success\nOOMPolicy=stop\nMemoryPeak=41064161280"
+      },
+      "samples": 1,
+      "source": {
+        "buildMode": "nix-release",
+        "dirty": false,
+        "revision": "26a659daf5310a8d5125d77bdea0a8c54860ddfb"
+      },
+      "tg": 14.63,
+      "tg_sd": null
+    },
+    "16384": {
+      "acceptance": 61.19,
+      "acceptance_sd": null,
+      "accepted_per_step": 1.78,
+      "accepted_per_step_sd": null,
+      "command": "llama-server-mtp -m Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf -c 35456 -np 1 --port 35455 --host 127.0.0.1 --alias bench -ngl 999 -fa on --cache-reuse 0 --jinja --reasoning off --cache-ram 0 --spec-type draft-mtp --spec-draft-model mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf --spec-draft-ngl 999",
+      "counts": [
+        {
+          "cache_n": 16324,
+          "draft_n": 134,
+          "draft_n_accepted": 82,
+          "predicted_n": 128,
+          "prompt_n": 2047
+        }
+      ],
+      "measuredOn": "2026-09-22",
+      "pp": 341.98,
+      "pp_sd": null,
+      "samples": 1,
+      "source": {
+        "buildMode": "nix-release",
+        "dirty": true,
+        "revision": "ff539ca5a1b321c917dbed2f19a868a17e1383f7"
+      },
+      "tg": 32.07,
+      "tg_sd": null
+    },
+    "32768": {
+      "acceptance": 49.67,
+      "acceptance_sd": null,
+      "accepted_per_step": 1.46,
+      "accepted_per_step_sd": null,
+      "command": "llama-server-mtp -m Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf -c 35456 -np 1 --port 35455 --host 127.0.0.1 --alias bench -ngl 999 -fa on --cache-reuse 0 --jinja --reasoning off --cache-ram 0 --spec-type draft-mtp --spec-draft-model mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf --spec-draft-ngl 999",
+      "counts": [
+        {
+          "cache_n": 32718,
+          "draft_n": 153,
+          "draft_n_accepted": 76,
+          "predicted_n": 128,
+          "prompt_n": 2029
+        }
+      ],
+      "measuredOn": "2026-09-22",
+      "pp": 271.28,
+      "pp_sd": null,
+      "samples": 1,
+      "source": {
+        "buildMode": "nix-release",
+        "dirty": true,
+        "revision": "ff539ca5a1b321c917dbed2f19a868a17e1383f7"
+      },
+      "tg": 25.41,
+      "tg_sd": null
+    },
+    "4096": {
+      "acceptance": 60.0,
+      "acceptance_sd": null,
+      "accepted_per_step": 1.72,
+      "accepted_per_step_sd": null,
+      "command": "llama-server-mtp -m Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf -c 35456 -np 1 --port 35455 --host 127.0.0.1 --alias bench -ngl 999 -fa on --cache-reuse 0 --jinja --reasoning off --cache-ram 0 --spec-type draft-mtp --spec-draft-model mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf --spec-draft-ngl 999",
+      "counts": [
+        {
+          "cache_n": 4095,
+          "draft_n": 135,
+          "draft_n_accepted": 81,
+          "predicted_n": 128,
+          "prompt_n": 2043
+        }
+      ],
+      "measuredOn": "2026-09-22",
+      "pp": 423.79,
+      "pp_sd": null,
+      "samples": 1,
+      "source": {
+        "buildMode": "nix-release",
+        "dirty": true,
+        "revision": "ff539ca5a1b321c917dbed2f19a868a17e1383f7"
+      },
+      "tg": 34.48,
+      "tg_sd": null
+    },
+    "65536": {
+      "acceptance": 50.0,
+      "acceptance_sd": null,
+      "accepted_per_step": 1.46,
+      "accepted_per_step_sd": null,
+      "command": "llama-server -m Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf -c 68224 -np 1 --port 53159 --host 127.0.0.1 --alias bench -ngl 999 -fa on --cache-reuse 0 --jinja --reasoning off --cache-ram 0 --spec-type draft-mtp --spec-draft-model mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf --spec-draft-ngl 999",
+      "counts": [
+        {
+          "cache_n": 65508,
+          "completion_sha256": "946e746bb845fd3ebf23de9d6504125c8725b23800a98cf9812d06d71c6d2250",
+          "draft_n": 152,
+          "draft_n_accepted": 76,
+          "predicted_n": 128,
+          "prompt_n": 2035
+        }
+      ],
+      "measuredOn": "2026-09-23",
+      "pp": 208.04,
+      "pp_sd": null,
+      "resourceControl": {
+        "hostAvailableFloorGiB": 3,
+        "hostMemoryGuardTriggered": false,
+        "memoryMaxGiB": 120,
+        "minimumHostAvailableGiB": 8.016,
+        "minimumHostAvailableGiBByPhase": {
+          "measured": 8.016,
+          "prefix": 8.23,
+          "startup": 10.054,
+          "warmup": 8.78
+        },
+        "requests": [
+          {
+            "majorFaults": 2,
+            "phase": "warmup",
+            "readBytes": 1794048,
+            "wallSeconds": 0.347
+          },
+          {
+            "majorFaults": 0,
+            "phase": "warmup",
+            "readBytes": 0,
+            "wallSeconds": 7.584
+          },
+          {
+            "majorFaults": 0,
+            "phase": "warmup",
+            "readBytes": 0,
+            "wallSeconds": 5.227
+          },
+          {
+            "majorFaults": 0,
+            "phase": "prefix",
+            "readBytes": 0,
+            "wallSeconds": 218.618
+          },
+          {
+            "majorFaults": 0,
+            "phase": "measured",
+            "readBytes": 0,
+            "wallSeconds": 16.119
+          },
+          {
+            "majorFaults": 0,
+            "phase": "prefix",
+            "readBytes": 0,
+            "wallSeconds": 4.833
+          },
+          {
+            "majorFaults": 0,
+            "phase": "measured",
+            "readBytes": 0,
+            "wallSeconds": 16.361
+          }
+        ],
+        "systemd": "Result=success\nOOMPolicy=stop\nMemoryPeak=42738278400"
+      },
+      "samples": 1,
+      "source": {
+        "buildMode": "nix-release",
+        "dirty": false,
+        "revision": "26a659daf5310a8d5125d77bdea0a8c54860ddfb"
+      },
+      "tg": 19.65,
+      "tg_sd": null
+    },
+    "8192": {
+      "acceptance": 61.19,
+      "acceptance_sd": null,
+      "accepted_per_step": 1.78,
+      "accepted_per_step_sd": null,
+      "command": "llama-server-mtp -m Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf -c 35456 -np 1 --port 35455 --host 127.0.0.1 --alias bench -ngl 999 -fa on --cache-reuse 0 --jinja --reasoning off --cache-ram 0 --spec-type draft-mtp --spec-draft-model mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf --spec-draft-ngl 999",
+      "counts": [
+        {
+          "cache_n": 8184,
+          "draft_n": 134,
+          "draft_n_accepted": 82,
+          "predicted_n": 128,
+          "prompt_n": 2048
+        }
+      ],
+      "measuredOn": "2026-09-22",
+      "pp": 393.56,
+      "pp_sd": null,
+      "samples": 1,
+      "source": {
+        "buildMode": "nix-release",
+        "dirty": true,
+        "revision": "ff539ca5a1b321c917dbed2f19a868a17e1383f7"
+      },
+      "tg": 32.2,
+      "tg_sd": null
+    }
+  },
+  "schemaVersion": 1,
+  "server": {
+    "command": [
+      "llama-server",
+      "-m",
+      "Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf",
+      "-c",
+      "133760",
+      "-np",
+      "1",
+      "--port",
+      "49849",
+      "--host",
+      "127.0.0.1",
+      "--alias",
+      "bench",
+      "-ngl",
+      "999",
+      "-fa",
+      "on",
+      "--cache-reuse",
+      "0",
+      "--jinja",
+      "--reasoning",
+      "off",
+      "--cache-ram",
+      "0",
+      "--spec-type",
+      "draft-mtp",
+      "--spec-draft-model",
+      "mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf",
+      "--spec-draft-ngl",
+      "999"
+    ]
+  },
+  "source": {
+    "buildMode": "nix-release",
+    "dirty": false,
+    "revision": "26a659daf5310a8d5125d77bdea0a8c54860ddfb"
+  },
+  "table": "single-mtp",
+  "target": "reference"
+}

@@ -1,0 +1,562 @@
+#ifndef GUFO_MODELS_MINIMAX_H3_VIDEO_VAE_OPS_HIP_HPP_
+#define GUFO_MODELS_MINIMAX_H3_VIDEO_VAE_OPS_HIP_HPP_
+
+#include <hip/hip_runtime.h>
+
+#include <cstddef>
+#include <cstdint>
+
+namespace gufo::minimax_h3::video_vae_ops {
+
+static __global__ void AddBiasKernel(float* values, const float* bias,
+                                     std::uint32_t rows, std::uint32_t width) {
+  const std::uint32_t column = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::uint32_t row = blockIdx.y;
+  if (row < rows && column < width) {
+    values[static_cast<std::size_t>(row) * width + column] += bias[column];
+  }
+}
+
+static __global__ void AddBiasFloat4Kernel(float4* values, const float4* bias,
+                                           std::uint32_t rows,
+                                           std::uint32_t vectors) {
+  const std::uint32_t column = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::uint32_t row = blockIdx.y;
+  if (row < rows && column < vectors) {
+    const std::size_t index = static_cast<std::size_t>(row) * vectors + column;
+    const float4 value = values[index];
+    const float4 offset = bias[column];
+    values[index] = {value.x + offset.x, value.y + offset.y, value.z + offset.z,
+                     value.w + offset.w};
+  }
+}
+
+inline void LaunchAddBias(float* values, const float* bias, std::uint32_t rows,
+                          std::uint32_t width, hipStream_t stream) {
+  constexpr std::uint32_t kThreads = 256;
+  if (width % 4U == 0U) {
+    const std::uint32_t vectors = width / 4U;
+    hipLaunchKernelGGL(
+        AddBiasFloat4Kernel, dim3((vectors + kThreads - 1U) / kThreads, rows),
+        dim3(kThreads), 0, stream, reinterpret_cast<float4*>(values),
+        reinterpret_cast<const float4*>(bias), rows, vectors);
+    return;
+  }
+  hipLaunchKernelGGL(AddBiasKernel,
+                     dim3((width + kThreads - 1U) / kThreads, rows),
+                     dim3(kThreads), 0, stream, values, bias, rows, width);
+}
+
+static __global__ void PrepareTileKernel(
+    const float* normalized, const float* mean, const float* deviation,
+    float* rows, std::uint32_t latent_time, std::uint32_t latent_height,
+    std::uint32_t latent_width, std::uint32_t start_time, std::uint32_t start_y,
+    std::uint32_t start_x, std::uint32_t tile_time, std::uint32_t tile_height,
+    std::uint32_t tile_width, std::uint32_t channels) {
+  const std::size_t elements =
+      static_cast<std::size_t>(tile_time) * tile_height * tile_width * channels;
+  const std::size_t index =
+      static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+  if (index >= elements) {
+    return;
+  }
+  const std::uint32_t channel = index % channels;
+  std::size_t remaining = index / channels;
+  const std::uint32_t x = remaining % tile_width;
+  remaining /= tile_width;
+  const std::uint32_t y = remaining % tile_height;
+  const std::uint32_t time = remaining / tile_height;
+  const std::size_t source =
+      (((static_cast<std::size_t>(channel) * latent_time +
+         (start_time + time)) *
+            latent_height +
+        (start_y + y)) *
+           latent_width +
+       (start_x + x));
+  rows[index] = fmaf(normalized[source], deviation[channel], mean[channel]);
+}
+
+inline void LaunchPrepareTile(
+    const float* normalized, const float* mean, const float* deviation,
+    float* rows, std::uint32_t latent_time, std::uint32_t latent_height,
+    std::uint32_t latent_width, std::uint32_t start_time, std::uint32_t start_y,
+    std::uint32_t start_x, std::uint32_t tile_time, std::uint32_t tile_height,
+    std::uint32_t tile_width, std::uint32_t channels, hipStream_t stream) {
+  const std::size_t elements =
+      static_cast<std::size_t>(tile_time) * tile_height * tile_width * channels;
+  constexpr std::size_t kThreads = 256;
+  hipLaunchKernelGGL(
+      PrepareTileKernel, dim3((elements + kThreads - 1U) / kThreads),
+      dim3(kThreads), 0, stream, normalized, mean, deviation, rows, latent_time,
+      latent_height, latent_width, start_time, start_y, start_x, tile_time,
+      tile_height, tile_width, channels);
+}
+
+static __global__ void RopeKernel(float* cosine, float* sine,
+                                  std::uint32_t patches, std::uint32_t sequence,
+                                  std::uint32_t tile_time,
+                                  std::uint32_t tile_height,
+                                  std::uint32_t tile_width) {
+  const std::uint32_t frequency = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::uint32_t row = blockIdx.y;
+  if (row >= sequence || frequency >= 24) {
+    return;
+  }
+  const std::size_t output = static_cast<std::size_t>(row) * 24 + frequency;
+  if (row >= patches) {
+    cosine[output] = 1.0F;
+    sine[output] = 0.0F;
+    return;
+  }
+  std::uint32_t remaining = row;
+  const std::uint32_t x = remaining % tile_width;
+  remaining /= tile_width;
+  const std::uint32_t y = remaining % tile_height;
+  const std::uint32_t time = remaining / tile_height;
+  const std::uint32_t axis = frequency / 8U;
+  const std::uint32_t frequency_in_axis = frequency % 8U;
+  float coordinate = 0.0F;
+  if (axis == 0) {
+    coordinate = 2.0F * ((static_cast<float>(time) + 0.5F) /
+                         static_cast<float>(tile_time)) -
+                 1.0F;
+  } else if (axis == 1) {
+    coordinate = 2.0F * ((static_cast<float>(y) + 0.5F) /
+                         static_cast<float>(tile_height)) -
+                 1.0F;
+  } else {
+    coordinate = 2.0F * ((static_cast<float>(x) + 0.5F) /
+                         static_cast<float>(tile_width)) -
+                 1.0F;
+  }
+  constexpr float kTwoPi = 6.28318530717958647692F;
+  const float inverse =
+      1.0F / powf(100.0F, static_cast<float>(frequency_in_axis) * 0.125F);
+  const float angle = kTwoPi * coordinate * inverse;
+  cosine[output] = cosf(angle);
+  sine[output] = sinf(angle);
+}
+
+inline void LaunchRope(float* cosine, float* sine, std::uint32_t patches,
+                       std::uint32_t sequence, std::uint32_t tile_time,
+                       std::uint32_t tile_height, std::uint32_t tile_width,
+                       hipStream_t stream) {
+  hipLaunchKernelGGL(RopeKernel, dim3(1, sequence), dim3(32), 0, stream, cosine,
+                     sine, patches, sequence, tile_time, tile_height,
+                     tile_width);
+}
+
+static __global__ void RmsNormKernel(const float* input, const float* weight,
+                                     float* output, std::uint32_t rows,
+                                     std::uint32_t width, float epsilon) {
+  constexpr std::uint32_t kRowsPerBlock = 8;
+  const std::uint32_t lane = threadIdx.x & 31U;
+  const std::uint32_t wave = threadIdx.x >> 5U;
+  const std::uint32_t row = blockIdx.x * kRowsPerBlock + wave;
+  if (row >= rows) {
+    return;
+  }
+  const std::size_t base = static_cast<std::size_t>(row) * width;
+  float local = 0.0F;
+  for (std::uint32_t column = lane; column < width; column += 32U) {
+    local = fmaf(input[base + column], input[base + column], local);
+  }
+#pragma unroll
+  for (std::uint32_t stride = 16U; stride != 0U; stride >>= 1U) {
+    local += __shfl_down(local, stride, 32);
+  }
+  const float inverse =
+      rsqrtf(__shfl(local, 0, 32) / static_cast<float>(width) + epsilon);
+  for (std::uint32_t column = lane; column < width; column += 32U) {
+    output[base + column] = input[base + column] * inverse * weight[column];
+  }
+}
+
+inline void LaunchRmsNorm(const float* input, const float* weight,
+                          float* output, std::uint32_t rows,
+                          std::uint32_t width, float epsilon,
+                          hipStream_t stream) {
+  constexpr std::uint32_t kRowsPerBlock = 8;
+  hipLaunchKernelGGL(RmsNormKernel,
+                     dim3((rows + kRowsPerBlock - 1U) / kRowsPerBlock),
+                     dim3(kRowsPerBlock * 32U), 0, stream, input, weight,
+                     output, rows, width, epsilon);
+}
+
+static __global__ void LayerNormKernel(const float* input, const float* weight,
+                                       const float* bias, float* output,
+                                       std::uint32_t rows, std::uint32_t width,
+                                       float epsilon) {
+  constexpr std::uint32_t kRowsPerBlock = 8;
+  const std::uint32_t lane = threadIdx.x & 31U;
+  const std::uint32_t wave = threadIdx.x >> 5U;
+  const std::uint32_t row = blockIdx.x * kRowsPerBlock + wave;
+  const bool active = row < rows;
+  const std::size_t base = static_cast<std::size_t>(row) * width;
+  float local_sum = 0.0F;
+  if (active) {
+    for (std::uint32_t column = lane; column < width; column += 32U) {
+      local_sum += input[base + column];
+    }
+  }
+  for (std::uint32_t stride = 16U; stride != 0; stride >>= 1U) {
+    const float peer = __shfl_down(local_sum, stride, 32);
+    if (lane < stride) {
+      local_sum += peer;
+    }
+  }
+  const float mean = __shfl(local_sum, 0, 32) / static_cast<float>(width);
+  float local_square = 0.0F;
+  if (active) {
+    for (std::uint32_t column = lane; column < width; column += 32U) {
+      const float centered = input[base + column] - mean;
+      local_square = fmaf(centered, centered, local_square);
+    }
+  }
+  for (std::uint32_t stride = 16U; stride != 0; stride >>= 1U) {
+    const float peer = __shfl_down(local_square, stride, 32);
+    if (lane < stride) {
+      local_square += peer;
+    }
+  }
+  const float variance =
+      __shfl(local_square, 0, 32) / static_cast<float>(width);
+  const float inverse = rsqrtf(variance + epsilon);
+  if (active) {
+    for (std::uint32_t column = lane; column < width; column += 32U) {
+      output[base + column] =
+          (input[base + column] - mean) * inverse * weight[column] +
+          bias[column];
+    }
+  }
+}
+
+inline void LaunchLayerNorm(const float* input, const float* weight,
+                            const float* bias, float* output,
+                            std::uint32_t rows, std::uint32_t width,
+                            float epsilon, hipStream_t stream) {
+  constexpr std::uint32_t kRowsPerBlock = 8;
+  hipLaunchKernelGGL(LayerNormKernel,
+                     dim3((rows + kRowsPerBlock - 1U) / kRowsPerBlock),
+                     dim3(kRowsPerBlock * 32U), 0, stream, input, weight, bias,
+                     output, rows, width, epsilon);
+}
+
+static __global__ void VideoQkvRopeKernel(
+    const float* qkv, const float* bias, const float* cosine, const float* sine,
+    float* query, float* key, float* value, std::uint32_t rows,
+    std::uint32_t heads, std::uint32_t head_dimension, std::uint32_t rope_half,
+    float epsilon) {
+  const std::uint32_t lane = threadIdx.x;
+  const std::uint32_t head = blockIdx.x;
+  const std::uint32_t row = blockIdx.y;
+  if (row >= rows || head >= heads || lane >= head_dimension) {
+    return;
+  }
+  const std::size_t base =
+      (static_cast<std::size_t>(row) * heads + head) * head_dimension * 3U;
+  const std::size_t bias_base =
+      static_cast<std::size_t>(head) * head_dimension * 3U;
+  const float query_value = qkv[base + lane] + bias[bias_base + lane];
+  const float key_value = qkv[base + head_dimension + lane] +
+                          bias[bias_base + head_dimension + lane];
+  __shared__ float query_squares[64];
+  __shared__ float key_squares[64];
+  query_squares[lane] = query_value * query_value;
+  key_squares[lane] = key_value * key_value;
+  __syncthreads();
+  for (std::uint32_t stride = head_dimension / 2U; stride != 0; stride >>= 1U) {
+    if (lane < stride) {
+      query_squares[lane] += query_squares[lane + stride];
+      key_squares[lane] += key_squares[lane + stride];
+    }
+    __syncthreads();
+  }
+  const float query_inverse =
+      rsqrtf(query_squares[0] / static_cast<float>(head_dimension) + epsilon);
+  const float key_inverse =
+      rsqrtf(key_squares[0] / static_cast<float>(head_dimension) + epsilon);
+  float transformed_query = query_value * query_inverse;
+  float transformed_key = key_value * key_inverse;
+  if (lane < rope_half) {
+    const std::uint32_t pair = lane + rope_half;
+    const float pair_query =
+        (qkv[base + pair] + bias[bias_base + pair]) * query_inverse;
+    const float pair_key = (qkv[base + head_dimension + pair] +
+                            bias[bias_base + head_dimension + pair]) *
+                           key_inverse;
+    const float c = cosine[static_cast<std::size_t>(row) * rope_half + lane];
+    const float s = sine[static_cast<std::size_t>(row) * rope_half + lane];
+    transformed_query = transformed_query * c - pair_query * s;
+    transformed_key = transformed_key * c - pair_key * s;
+  } else if (lane < rope_half * 2U) {
+    const std::uint32_t pair = lane - rope_half;
+    const float pair_query =
+        (qkv[base + pair] + bias[bias_base + pair]) * query_inverse;
+    const float pair_key = (qkv[base + head_dimension + pair] +
+                            bias[bias_base + head_dimension + pair]) *
+                           key_inverse;
+    const float c = cosine[static_cast<std::size_t>(row) * rope_half + pair];
+    const float s = sine[static_cast<std::size_t>(row) * rope_half + pair];
+    transformed_query = transformed_query * c + pair_query * s;
+    transformed_key = transformed_key * c + pair_key * s;
+  }
+  const std::size_t output =
+      (static_cast<std::size_t>(row) * heads + head) * head_dimension + lane;
+  query[output] = transformed_query;
+  key[output] = transformed_key;
+  value[output] = qkv[base + head_dimension * 2U + lane] +
+                  bias[bias_base + head_dimension * 2U + lane];
+}
+
+inline void LaunchVideoQkvRope(const float* qkv, const float* bias,
+                               const float* cosine, const float* sine,
+                               float* query, float* key, float* value,
+                               std::uint32_t rows, std::uint32_t heads,
+                               std::uint32_t head_dimension,
+                               std::uint32_t rope_half, float epsilon,
+                               hipStream_t stream) {
+  hipLaunchKernelGGL(VideoQkvRopeKernel, dim3(heads, rows),
+                     dim3(head_dimension), 0, stream, qkv, bias, cosine, sine,
+                     query, key, value, rows, heads, head_dimension, rope_half,
+                     epsilon);
+}
+
+__device__ __forceinline__ float SoftmaxWaveMaximum(float value) {
+#pragma unroll
+  for (std::uint32_t offset = 16; offset != 0; offset >>= 1U) {
+    value = fmaxf(value, __shfl_down(value, offset));
+  }
+  return __shfl(value, 0);
+}
+
+__device__ __forceinline__ float SoftmaxWaveSum(float value) {
+#pragma unroll
+  for (std::uint32_t offset = 16; offset != 0; offset >>= 1U) {
+    value += __shfl_down(value, offset);
+  }
+  return __shfl(value, 0);
+}
+
+// rocBLAS materializes one score matrix per head as
+// [head][query_row][key_row]. Eight independent gfx1151 wavefronts normalize
+// eight rows per workgroup and retain the probabilities in FP32 for the PV
+// GEMM. Each row keeps the same wave-local reduction order.
+static __global__ void SoftmaxScoresInPlaceKernel(float* scores,
+                                                  std::uint32_t rows,
+                                                  std::uint32_t heads) {
+  constexpr std::uint32_t kRowsPerBlock = 8;
+  const std::uint32_t lane = threadIdx.x & 31U;
+  const std::uint32_t wave = threadIdx.x >> 5U;
+  const std::uint32_t query_row = blockIdx.x * kRowsPerBlock + wave;
+  const std::uint32_t head = blockIdx.y;
+  if (query_row >= rows || head >= heads) {
+    return;
+  }
+  const std::size_t base =
+      (static_cast<std::size_t>(head) * rows + query_row) * rows;
+  float local_maximum = -INFINITY;
+  for (std::uint32_t key_row = lane; key_row < rows; key_row += 32U) {
+    local_maximum = fmaxf(local_maximum, scores[base + key_row]);
+  }
+  const float maximum = SoftmaxWaveMaximum(local_maximum);
+  float local_sum = 0.0F;
+  for (std::uint32_t key_row = lane; key_row < rows; key_row += 32U) {
+    const float probability = expf(scores[base + key_row] - maximum);
+    scores[base + key_row] = probability;
+    local_sum += probability;
+  }
+  const float inverse_sum = 1.0F / SoftmaxWaveSum(local_sum);
+  for (std::uint32_t key_row = lane; key_row < rows; key_row += 32U) {
+    scores[base + key_row] *= inverse_sum;
+  }
+}
+
+inline void LaunchSoftmaxScoresInPlace(float* scores, std::uint32_t rows,
+                                       std::uint32_t heads,
+                                       hipStream_t stream) {
+  constexpr std::uint32_t kRowsPerBlock = 8;
+  hipLaunchKernelGGL(SoftmaxScoresInPlaceKernel,
+                     dim3((rows + kRowsPerBlock - 1U) / kRowsPerBlock, heads),
+                     dim3(256), 0, stream, scores, rows, heads);
+}
+
+static __global__ void SwiGluKernel(const float* fused, const float* bias,
+                                    float* output, std::uint32_t rows,
+                                    std::uint32_t width) {
+  const std::uint32_t column = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::uint32_t row = blockIdx.y;
+  if (row < rows && column < width) {
+    const std::size_t base = static_cast<std::size_t>(row) * width * 2U;
+    const float gate = fused[base + column] + bias[column];
+    const float up = fused[base + width + column] + bias[width + column];
+    output[static_cast<std::size_t>(row) * width + column] =
+        (gate / (1.0F + expf(-gate))) * up;
+  }
+}
+
+static __global__ void SwiGluFloat4Kernel(const float4* fused,
+                                          const float4* bias, float4* output,
+                                          std::uint32_t rows,
+                                          std::uint32_t vectors) {
+  const std::uint32_t column = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::uint32_t row = blockIdx.y;
+  if (row >= rows || column >= vectors) {
+    return;
+  }
+  const std::size_t input_base = static_cast<std::size_t>(row) * vectors * 2U;
+  const float4 gate_value = fused[input_base + column];
+  const float4 up_value = fused[input_base + vectors + column];
+  const float4 gate_bias = bias[column];
+  const float4 up_bias = bias[vectors + column];
+  const float gate_x = gate_value.x + gate_bias.x;
+  const float gate_y = gate_value.y + gate_bias.y;
+  const float gate_z = gate_value.z + gate_bias.z;
+  const float gate_w = gate_value.w + gate_bias.w;
+  const float up_x = up_value.x + up_bias.x;
+  const float up_y = up_value.y + up_bias.y;
+  const float up_z = up_value.z + up_bias.z;
+  const float up_w = up_value.w + up_bias.w;
+  output[static_cast<std::size_t>(row) * vectors + column] = {
+      (gate_x / (1.0F + expf(-gate_x))) * up_x,
+      (gate_y / (1.0F + expf(-gate_y))) * up_y,
+      (gate_z / (1.0F + expf(-gate_z))) * up_z,
+      (gate_w / (1.0F + expf(-gate_w))) * up_w};
+}
+
+inline void LaunchSwiGlu(const float* fused, const float* bias, float* output,
+                         std::uint32_t rows, std::uint32_t width,
+                         hipStream_t stream) {
+  constexpr std::uint32_t kThreads = 256;
+  if (width % 4U == 0U) {
+    const std::uint32_t vectors = width / 4U;
+    hipLaunchKernelGGL(
+        SwiGluFloat4Kernel, dim3((vectors + kThreads - 1U) / kThreads, rows),
+        dim3(kThreads), 0, stream, reinterpret_cast<const float4*>(fused),
+        reinterpret_cast<const float4*>(bias),
+        reinterpret_cast<float4*>(output), rows, vectors);
+    return;
+  }
+  hipLaunchKernelGGL(
+      SwiGluKernel, dim3((width + kThreads - 1U) / kThreads, rows),
+      dim3(kThreads), 0, stream, fused, bias, output, rows, width);
+}
+
+static __global__ void ScaleAddKernel(float* residual, const float* branch,
+                                      const float* bias, const float* scale,
+                                      std::uint32_t rows, std::uint32_t width) {
+  const std::uint32_t column = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::uint32_t row = blockIdx.y;
+  if (row < rows && column < width) {
+    const std::size_t index = static_cast<std::size_t>(row) * width + column;
+    const float biased = branch[index] + bias[column];
+    residual[index] = fmaf(biased, scale[column], residual[index]);
+  }
+}
+
+static __global__ void ScaleAddFloat4Kernel(
+    float4* residual, const float4* branch, const float4* bias,
+    const float4* scale, std::uint32_t rows, std::uint32_t vectors) {
+  const std::uint32_t column = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::uint32_t row = blockIdx.y;
+  if (row >= rows || column >= vectors) {
+    return;
+  }
+  const std::size_t index = static_cast<std::size_t>(row) * vectors + column;
+  const float4 current = residual[index];
+  const float4 value = branch[index];
+  const float4 offset = bias[column];
+  const float4 multiplier = scale[column];
+  residual[index] = {
+      fmaf(value.x + offset.x, multiplier.x, current.x),
+      fmaf(value.y + offset.y, multiplier.y, current.y),
+      fmaf(value.z + offset.z, multiplier.z, current.z),
+      fmaf(value.w + offset.w, multiplier.w, current.w),
+  };
+}
+
+inline void LaunchScaleAdd(float* residual, const float* branch,
+                           const float* bias, const float* scale,
+                           std::uint32_t rows, std::uint32_t width,
+                           hipStream_t stream) {
+  constexpr std::uint32_t kThreads = 256;
+  if (width % 4U == 0U) {
+    const std::uint32_t vectors = width / 4U;
+    hipLaunchKernelGGL(
+        ScaleAddFloat4Kernel, dim3((vectors + kThreads - 1U) / kThreads, rows),
+        dim3(kThreads), 0, stream, reinterpret_cast<float4*>(residual),
+        reinterpret_cast<const float4*>(branch),
+        reinterpret_cast<const float4*>(bias),
+        reinterpret_cast<const float4*>(scale), rows, vectors);
+    return;
+  }
+  hipLaunchKernelGGL(
+      ScaleAddKernel, dim3((width + kThreads - 1U) / kThreads, rows),
+      dim3(kThreads), 0, stream, residual, branch, bias, scale, rows, width);
+}
+
+static __global__ void UnpackRgbKernel(const float* projected,
+                                       const std::int32_t* frames, float* rgb,
+                                       std::uint32_t frame_count,
+                                       std::uint32_t tile_height,
+                                       std::uint32_t tile_width,
+                                       std::uint32_t output_frames) {
+  const std::size_t elements = static_cast<std::size_t>(frame_count) *
+                               tile_height * 16U * tile_width * 16U * 3U;
+  const std::size_t index =
+      static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+  if (index >= elements) {
+    return;
+  }
+  const std::uint32_t channel = index % 3U;
+  std::size_t remaining = index / 3U;
+  const std::uint32_t x = remaining % (tile_width * 16U);
+  remaining /= tile_width * 16U;
+  const std::uint32_t y = remaining % (tile_height * 16U);
+  const std::uint32_t selected = remaining / (tile_height * 16U);
+  const std::uint32_t frame = static_cast<std::uint32_t>(frames[selected]);
+  if (frame >= output_frames) {
+    return;
+  }
+  std::uint32_t decoded_time = frame + 3U;
+  if (output_frames == 22U && frame >= 17U) {
+    decoded_time += 3U;
+  }
+  const std::uint32_t patch_time = decoded_time / 4U;
+  const std::uint32_t within_time = decoded_time % 4U;
+  const std::uint32_t patch_y = y / 16U;
+  const std::uint32_t within_y = y % 16U;
+  const std::uint32_t patch_x = x / 16U;
+  const std::uint32_t within_x = x % 16U;
+  const std::size_t patch =
+      (static_cast<std::size_t>(patch_time) * tile_height + patch_y) *
+          tile_width +
+      patch_x;
+  const std::size_t component =
+      (((static_cast<std::size_t>(channel) * 4U + within_time) * 16U +
+        within_y) *
+           16U +
+       within_x);
+  constexpr float kMean[3] = {0.485F, 0.456F, 0.406F};
+  constexpr float kDeviation[3] = {0.229F, 0.224F, 0.225F};
+  const float value = fmaf(projected[patch * 3072U + component],
+                           kDeviation[channel], kMean[channel]);
+  rgb[index] = fminf(1.0F, fmaxf(0.0F, value));
+}
+
+inline void LaunchUnpackRgb(const float* projected, const std::int32_t* frames,
+                            float* rgb, std::uint32_t frame_count,
+                            std::uint32_t tile_height, std::uint32_t tile_width,
+                            std::uint32_t output_frames, hipStream_t stream) {
+  const std::size_t elements = static_cast<std::size_t>(frame_count) *
+                               tile_height * 16U * tile_width * 16U * 3U;
+  constexpr std::size_t kThreads = 256;
+  hipLaunchKernelGGL(UnpackRgbKernel,
+                     dim3((elements + kThreads - 1U) / kThreads),
+                     dim3(kThreads), 0, stream, projected, frames, rgb,
+                     frame_count, tile_height, tile_width, output_frames);
+}
+
+}  // namespace gufo::minimax_h3::video_vae_ops
+
+#endif  // GUFO_MODELS_MINIMAX_H3_VIDEO_VAE_OPS_HIP_HPP_

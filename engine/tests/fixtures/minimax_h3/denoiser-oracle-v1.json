@@ -1,0 +1,84 @@
+{
+  "schema": "gufo.minimax-h3-denoiser-golden.v1",
+  "model_revision": "42ed227ee7df40d41602854ae760620d6eb651fe",
+  "reference_revision": "8974cc055ea9c02fcd14cc27dfda3e1027c05153",
+  "geometry": {
+    "text_rows": 6,
+    "width": 256,
+    "height": 256,
+    "frames": 22,
+    "video_latent_frames": 7,
+    "audio_latent_frames": 37,
+    "latent_height": 16,
+    "latent_width": 16,
+    "audio_rows": 74,
+    "video_rows": 448,
+    "rows": 528
+  },
+  "steps": 4,
+  "executed_forwards": 1,
+  "forward_only": true,
+  "blocks": 50,
+  "reuse_interval": 1,
+  "seed": 42,
+  "noise_mode": "seeded",
+  "spatial_rope_scale": 1.0,
+  "time_rows": 7,
+  "arithmetic": {
+    "weights": "released BF16/F32",
+    "activations": "BF16 at transformer operation boundaries",
+    "attention_accumulation": "FP32",
+    "final_head_accumulation": "FP32",
+    "euler_velocity": "FP32"
+  },
+  "quality_bounds": {
+    "refined_text": 0.02,
+    "block0_modulation": 0.02,
+    "video_velocity_relative_l2": 0.04,
+    "video_velocity_relative_max": 0.05,
+    "audio_velocity_relative_l2": 0.05,
+    "audio_velocity_relative_max": 0.05
+  },
+  "files": {
+    "conditioning.bf16": {
+      "bytes": 61440,
+      "shape": [6, 5120],
+      "sha256": "8015af1d2a551a0509bccc84372a30087f66721613f909c3f99e36ad7e269692"
+    },
+    "refined_text.bf16": {
+      "bytes": 64512,
+      "shape": [6, 5376],
+      "sha256": "be0d360ced628aa8778c95574a18f4593f938bdd0b72b292e1a8d452641e7aba"
+    },
+    "block0_modulation.bf16": {
+      "bytes": 1354752,
+      "shape": [21, 6, 5376],
+      "sha256": "38b0e3db26f24730a21304d5fa13fa049b6c5196c925cf5e87114505a1e87d39"
+    },
+    "row_map_step0.u32": {
+      "bytes": 2112,
+      "shape": [528],
+      "sha256": "816629a33e18daef4f94301aba7b54ba832c50db86fd8ae16a66f86f8d03f5d0"
+    },
+    "video_initial.f32": {
+      "bytes": 172032,
+      "shape": [43008],
+      "sha256": "fce1ea483ab56dc3de354d0c056f05020ae80aba70450046b08d8ac12d9bd463"
+    },
+    "audio_initial.f32": {
+      "bytes": 9472,
+      "shape": [2368],
+      "sha256": "d1c2934f2556c98e12aa0d9de550b0801037b8fea293946112d608132ca80b5f"
+    },
+    "video_velocity_step0.f32": {
+      "bytes": 172032,
+      "shape": [43008],
+      "sha256": "2ae88a7d019cf64b6fc0d3a8d17e685e510304cf0e1a373a01acbf27db3d995b"
+    },
+    "audio_velocity_step0.f32": {
+      "bytes": 9472,
+      "shape": [2368],
+      "sha256": "b17813b33cd76383b4614f9e025b4ecdfdad7ba60a204508d1a3ded25ada9079"
+    }
+  }
+}

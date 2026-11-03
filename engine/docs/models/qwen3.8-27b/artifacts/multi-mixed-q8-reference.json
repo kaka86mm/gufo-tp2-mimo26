@@ -1,0 +1,228 @@
+{
+  "schemaVersion": "1.0.0",
+  "model": {
+    "id": "bench"
+  },
+  "source": {
+    "revision": "68d9053afd4f4d0752ced6187585f862355a40be",
+    "dirty": false,
+    "buildMode": "nix-release"
+  },
+  "workload": {
+    "cachePrompt": false,
+    "caseIds": [
+      "expository_pangram",
+      "cpp_ring_buffer",
+      "reasoning_train",
+      "summary_gpu",
+      "italian_explanation",
+      "chinese_explanation",
+      "json_schedule",
+      "creative_station",
+      "instruction_debug"
+    ],
+    "categories": [
+      "code",
+      "creative",
+      "expository",
+      "instruction",
+      "multilingual",
+      "reasoning",
+      "structured",
+      "summarization"
+    ],
+    "concurrency": [
+      1
+    ],
+    "corpusLayout": "distinct",
+    "endpointProfile": "openai",
+    "id": "qwen3.8-27b-multi-mixed-q8-reference-ar",
+    "maxOutputTokens": 128,
+    "mode": "corpus",
+    "paddingPolicy": "cycle-from-start",
+    "promptCount": 9,
+    "repetitions": 1,
+    "suiteSha256": "b88da26d719c0fa810935f91ea03109e4019c4da6ae35fa339776446dfc049e7",
+    "temperature": 0.0,
+    "transport": "openai-chat-completions-sse",
+    "warmupRounds": 1
+  },
+  "artifactType": "model-bench-quality-reference",
+  "notes": [
+    "Retained AR completion hashes and execution-consistency evidence, without performance timings. Reuse for DFlash2 quality checks; refresh when target arithmetic, weights, tokenizer or request settings change."
+  ],
+  "results": {
+    "c8": {
+      "qualification": {
+        "measuredOn": "2026-09-23",
+        "source": {
+          "revision": "68d9053afd4f4d0752ced6187585f862355a40be",
+          "dirty": false,
+          "binary_sha256": "81dee29e5fbc234bbb4ae90c022de9c9d8513d1cefa960550b0bb59d9fc5346f"
+        },
+        "binary_sha256": "81dee29e5fbc234bbb4ae90c022de9c9d8513d1cefa960550b0bb59d9fc5346f",
+        "report_sha256": "30baadcd887452eef9502293b871db8a1d61db3041bea597091f8f2a3f8757e5",
+        "summary_sha256": "e98673ad87b3c4d2d8d3a36b1fc2c3d88cb32806befff33283322791ad9bc67c",
+        "method": "Fresh server, greedy, thinking off, one warmup round and one measured repetition; per-request decode rates averaged over full cohorts.",
+        "target": "Qwen3.8-27B-UD-Q8_K_XL.gguf",
+        "draft": null,
+        "context_per_request": 4096,
+        "seed": 1,
+        "max_output_tokens": 128,
+        "eos_note": "The two-sentence summary normally ends before the 128-token cap. Rates use actual emitted counts; same corpus and EOS handling on both engines."
+      },
+      "completionExactness": {
+        "comparedRequests": 16,
+        "exactRequests": 9,
+        "exactRate": 0.5625,
+        "comparedCases": 9,
+        "matchedCases": 4,
+        "matchedRounds": 0
+      },
+      "originalReferenceExactness": {
+        "comparedRequests": 16,
+        "exactRequests": 9,
+        "exactRate": 0.5625,
+        "comparedCases": 9,
+        "matchedCases": 4,
+        "matchedRounds": 0
+      },
+      "originalReference": {
+        "source": "report",
+        "workloadId": "q27-q8-c26-ar-corpus-oracle",
+        "suiteSha256": "b88da26d719c0fa810935f91ea03109e4019c4da6ae35fa339776446dfc049e7",
+        "modelId": "bench"
+      },
+      "cases": {
+        "chinese_explanation": {
+          "completionHashes": [
+            "81f3dc27acfc0fa6e9527c3b13c8c1872f1c53b55e64ffaafc3db759247bd57f"
+          ]
+        },
+        "cpp_ring_buffer": {
+          "completionHashes": [
+            "0a04617883f83ad87d983d4ad34067b52f7bf17b1b2fee7962088ba27f4c2834"
+          ]
+        },
+        "creative_station": {
+          "completionHashes": [
+            "eb157824e092bd96f82648a9481085fe7cb50588bd5b5bf5cd85d22d2a8a2b8e"
+          ]
+        },
+        "expository_pangram": {
+          "completionHashes": [
+            "de82b5096c79e312160c51e252e6180353a6ae9d72d124eb8868f444e5745c0a",
+            "ea64966409be560b23998505139c5bd755526ae99059f51bb5bfa157c597eb85"
+          ]
+        },
+        "instruction_debug": {
+          "completionHashes": [
+            "7bb21d281ad50b3f96e8a245f2e6ac074292fec0cacd3646be7d67699f9a5dc4"
+          ]
+        },
+        "italian_explanation": {
+          "completionHashes": [
+            "362f893fb61829e797134ef9348b83dd5248ec26fe65ba75dae1b4ca736c49e7"
+          ]
+        },
+        "json_schedule": {
+          "completionHashes": [
+            "45404ae1a6420dc9bf560c27605f9d0b80cf0c9d7832cc22af5fb7cbf71c97b9"
+          ]
+        },
+        "reasoning_train": {
+          "completionHashes": [
+            "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+          ]
+        },
+        "summary_gpu": {
+          "completionHashes": [
+            "e39c2380468afd635647f31024cbac1e9f7157f64e43ec66c8d6c9f93bfb4ce3"
+          ]
+        }
+      },
+      "samples": [
+        {
+          "case_id": "expository_pangram",
+          "completion_tokens": 128,
+          "completion_sha256": "ea64966409be560b23998505139c5bd755526ae99059f51bb5bfa157c597eb85"
+        },
+        {
+          "case_id": "cpp_ring_buffer",
+          "completion_tokens": 128,
+          "completion_sha256": "0a04617883f83ad87d983d4ad34067b52f7bf17b1b2fee7962088ba27f4c2834"
+        },
+        {
+          "case_id": "reasoning_train",
+          "completion_tokens": 128,
+          "completion_sha256": "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+        },
+        {
+          "case_id": "summary_gpu",
+          "completion_tokens": 38,
+          "completion_sha256": "e39c2380468afd635647f31024cbac1e9f7157f64e43ec66c8d6c9f93bfb4ce3"
+        },
+        {
+          "case_id": "italian_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "362f893fb61829e797134ef9348b83dd5248ec26fe65ba75dae1b4ca736c49e7"
+        },
+        {
+          "case_id": "chinese_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "81f3dc27acfc0fa6e9527c3b13c8c1872f1c53b55e64ffaafc3db759247bd57f"
+        },
+        {
+          "case_id": "json_schedule",
+          "completion_tokens": 128,
+          "completion_sha256": "45404ae1a6420dc9bf560c27605f9d0b80cf0c9d7832cc22af5fb7cbf71c97b9"
+        },
+        {
+          "case_id": "creative_station",
+          "completion_tokens": 128,
+          "completion_sha256": "eb157824e092bd96f82648a9481085fe7cb50588bd5b5bf5cd85d22d2a8a2b8e"
+        },
+        {
+          "case_id": "instruction_debug",
+          "completion_tokens": 128,
+          "completion_sha256": "7bb21d281ad50b3f96e8a245f2e6ac074292fec0cacd3646be7d67699f9a5dc4"
+        },
+        {
+          "case_id": "expository_pangram",
+          "completion_tokens": 128,
+          "completion_sha256": "de82b5096c79e312160c51e252e6180353a6ae9d72d124eb8868f444e5745c0a"
+        },
+        {
+          "case_id": "cpp_ring_buffer",
+          "completion_tokens": 128,
+          "completion_sha256": "0a04617883f83ad87d983d4ad34067b52f7bf17b1b2fee7962088ba27f4c2834"
+        },
+        {
+          "case_id": "reasoning_train",
+          "completion_tokens": 128,
+          "completion_sha256": "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+        },
+        {
+          "case_id": "summary_gpu",
+          "completion_tokens": 38,
+          "completion_sha256": "e39c2380468afd635647f31024cbac1e9f7157f64e43ec66c8d6c9f93bfb4ce3"
+        },
+        {
+          "case_id": "italian_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "362f893fb61829e797134ef9348b83dd5248ec26fe65ba75dae1b4ca736c49e7"
+        },
+        {
+          "case_id": "chinese_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "81f3dc27acfc0fa6e9527c3b13c8c1872f1c53b55e64ffaafc3db759247bd57f"
+        },
+        {
+          "case_id": "json_schedule",
+          "completion_tokens": 128,
+          "completion_sha256": "45404ae1a6420dc9bf560c27605f9d0b80cf0c9d7832cc22af5fb7cbf71c97b9"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,122 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Linker files
+*.ilk
+
+# Debugger Files
+*.pdb
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+*.so.*
+
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Build directories
+build/
+Build/
+build-*/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+install_manifest.txt
+compile_commands.json
+CMakeUserPresets.json
+
+# nix build symlink
+result
+result-*
+.direnv
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+*.swp
+*.db
+homelab/
+
+# vcpkg
+vcpkg_installed/
+
+# debug information files
+*.dwo
+
+# Test output & cache
+Testing/
+test-output/
+test-results/
+.cache/
+
+# Model artifacts, profiles, logit dumps, and teacher captures never belong in
+# source control. Keep the root anchored so similarly named fixture paths are
+# unaffected.
+/artifacts/
+/models/
+*.safetensors
+*.gguf
+*.ckpt
+pytorch_model*.bin
+/.venv/
+__pycache__/
+*.pyc
+
+# Sources
+# Temporary DS4 source trees and downloads
+/ds4*
+/llama.cpp*
+!src/models/deepseek_v4_flash/
+!src/models/deepseek_v4_flash/**
+
+# Keep intentional test fixtures trackable regardless of generated-file suffixes
+!fixtures/
+!fixtures/**
+!test/fixtures/
+!test/fixtures/**
+!tests/fixtures/
+!tests/fixtures/**
+
+# Agent helpers
+.codegraph
+context.md
+# graphify: knowledge graph, report and converted sidecars live here
+graphify-out/
+
+# Uncommitted opt-in capability suites
+tests/quality/compsec.json
+
+# rocprofv3 counter dumps
+.rocprofv3/
+
+# Claude Code local settings
+.claude/settings.local.json

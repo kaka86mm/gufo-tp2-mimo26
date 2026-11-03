@@ -1,0 +1,68 @@
+{
+  "schema": "gufo.minimax-h3-dit-block-golden.v1",
+  "model_revision": "42ed227ee7df40d41602854ae760620d6eb651fe",
+  "reference_revision": "8974cc055ea9c02fcd14cc27dfda3e1027c05153",
+  "block": 0,
+  "geometry": {
+    "text_rows": 6,
+    "width": 256,
+    "height": 256,
+    "frames": 22,
+    "audio_rows": 74,
+    "video_rows": 448,
+    "rows": 528
+  },
+  "arithmetic": {
+    "weights": "BF16",
+    "activations": "BF16 at operation boundaries",
+    "norm_and_attention_accumulation": "FP32",
+    "epsilon": 1e-05
+  },
+  "files": {
+    "hidden.bf16": {
+      "bytes": 5677056,
+      "shape": [528, 5376],
+      "sha256": "08516eb99b3c24c644eaf5040680ba1e149be773202223833f8c2e40ab1dd3ec"
+    },
+    "modulation.bf16": {
+      "bytes": 193536,
+      "shape": [3, 6, 5376],
+      "sha256": "dbfa48daedca87c113a556bbc59d0364914efe25e8b0c8deb4c89c80024707ed"
+    },
+    "row_map.u32": {
+      "bytes": 2112,
+      "shape": [528],
+      "sha256": "816629a33e18daef4f94301aba7b54ba832c50db86fd8ae16a66f86f8d03f5d0"
+    },
+    "rope_cos.bf16": {
+      "bytes": 50688,
+      "shape": [528, 48],
+      "sha256": "bcc490f17cd0a9d2df03909560bdaa48d6794a2ad1750010067b922fd5be661b"
+    },
+    "rope_sin.bf16": {
+      "bytes": 50688,
+      "shape": [528, 48],
+      "sha256": "0acfacc27e06e8e9478502dd435135d2f7fadf272dc62a0444bcde8ea2fb7156"
+    },
+    "modulation_attention.bf16": {
+      "bytes": 5677056,
+      "shape": [528, 5376],
+      "sha256": "e95dc9de8cddadb5eac131c5834f66a200489dd874b0178bfabf4c123b635bbe"
+    },
+    "attention_output.bf16": {
+      "bytes": 5677056,
+      "shape": [528, 5376],
+      "sha256": "d97ccc9d5cd47555b39c5dc13849fcd2625af0381b81994976030fd72acbad11"
+    },
+    "modulation_mlp.bf16": {
+      "bytes": 5677056,
+      "shape": [528, 5376],
+      "sha256": "6ba2f26f6324cb49b772636150280c57fc21d1c72a4d83d9078d35865091b8e8"
+    },
+    "block_output.bf16": {
+      "bytes": 5677056,
+      "shape": [528, 5376],
+      "sha256": "f5c7c96a6b33586d0aa5c6d77177b11b0c52eda935c40a3e9b325089b60047f5"
+    }
+  }
+}

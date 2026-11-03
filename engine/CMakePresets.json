@@ -1,0 +1,179 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "GUFO_ENABLE_WARNINGS": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Production gfx1151 build; same optimization as the Nix package",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "BUILD_TESTING": "OFF",
+        "ENGINE_ENABLE_HIP": "ON"
+      }
+    },
+    {
+      "name": "cpu-sanitizer",
+      "displayName": "CPU Sanitizer",
+      "description": "CPU-only build with AddressSanitizer and UndefinedBehaviorSanitizer enabled",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_TESTING": "ON",
+        "GUFO_ENABLE_SANITIZERS": "ON",
+        "ENGINE_ENABLE_HIP": "OFF"
+      }
+    },
+    {
+      "name": "cpu-test",
+      "displayName": "CPU Tests",
+      "description": "CPU-only build for running unit and smoke tests with CTest",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "BUILD_TESTING": "ON",
+        "ENGINE_ENABLE_HIP": "OFF"
+      }
+    },
+    {
+      "name": "gpu-test",
+      "displayName": "gfx1151 GPU Tests",
+      "description": "Optimized correctness build with debug symbols and active test assertions",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "BUILD_TESTING": "ON",
+        "ENGINE_ENABLE_HIP": "ON",
+        "GUFO_BUILD_TOOLS": "ON"
+      }
+    },
+    {
+      "name": "gpu-tp2",
+      "displayName": "gfx1151 TP=2 RDMA Tests",
+      "description": "GPU correctness build with the optional native RDMA adapter",
+      "inherits": "gpu-test",
+      "cacheVariables": {
+        "GUFO_ENABLE_TP2_RDMA": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "release",
+      "displayName": "Release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "cpu-sanitizer",
+      "displayName": "CPU Sanitizer",
+      "configurePreset": "cpu-sanitizer"
+    },
+    {
+      "name": "cpu-test",
+      "displayName": "CPU Tests",
+      "configurePreset": "cpu-test"
+    },
+    {
+      "name": "gpu-test",
+      "displayName": "gfx1151 GPU Tests",
+      "configurePreset": "gpu-test"
+    },
+    {
+      "name": "gpu-tp2",
+      "displayName": "gfx1151 TP=2 RDMA Tests",
+      "configurePreset": "gpu-tp2"
+    },
+    {
+      "name": "pr",
+      "configurePreset": "cpu-test",
+      "targets": [
+        "check-pr"
+      ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "cpu-sanitizer",
+      "displayName": "CPU ASan and UBSan Tests",
+      "configurePreset": "cpu-sanitizer",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "cpu-test",
+      "displayName": "CPU Tests",
+      "configurePreset": "cpu-test",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "label": "cpu"
+        }
+      }
+    },
+    {
+      "name": "gpu-full",
+      "displayName": "All gfx1151 GPU Tests",
+      "configurePreset": "gpu-test",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "gpu-fast",
+      "displayName": "Fast gfx1151 GPU Tests",
+      "configurePreset": "gpu-test",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "exclude": {
+          "label": "slow|external-model"
+        }
+      }
+    },
+    {
+      "name": "deepseek-gpu",
+      "displayName": "DeepSeek V4 Flash Checks",
+      "configurePreset": "gpu-test",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "label": "ds4"
+        }
+      }
+    },
+    {
+      "name": "qwen-gpu-kernel-oracle",
+      "displayName": "Qwen Comprehensive GPU Kernel Oracle",
+      "configurePreset": "gpu-test",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "label": "qwen-kernel-oracle"
+        }
+      }
+    }
+  ]
+}

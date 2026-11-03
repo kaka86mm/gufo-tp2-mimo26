@@ -1,0 +1,649 @@
+{
+  "schemaVersion": "1.0.0",
+  "model": {
+    "id": "bench"
+  },
+  "source": {
+    "buildMode": "nix-release",
+    "dirty": true,
+    "revision": "1589ed791a843ff05685c74a37b3c2bdb4cf5c1b"
+  },
+  "workload": {
+    "cachePrompt": false,
+    "caseIds": [
+      "expository_pangram",
+      "cpp_ring_buffer",
+      "reasoning_train",
+      "summary_gpu",
+      "italian_explanation",
+      "chinese_explanation",
+      "json_schedule",
+      "creative_station",
+      "instruction_debug"
+    ],
+    "categories": [
+      "code",
+      "creative",
+      "expository",
+      "instruction",
+      "multilingual",
+      "reasoning",
+      "structured",
+      "summarization"
+    ],
+    "concurrency": [
+      1
+    ],
+    "corpusLayout": "distinct",
+    "endpointProfile": "openai",
+    "id": "qwen3.8-27b-multi-mixed-q4-reference-ar",
+    "maxOutputTokens": 128,
+    "mode": "corpus",
+    "paddingPolicy": "cycle-from-start",
+    "promptCount": 9,
+    "repetitions": 1,
+    "suiteSha256": "b88da26d719c0fa810935f91ea03109e4019c4da6ae35fa339776446dfc049e7",
+    "temperature": 0.0,
+    "transport": "openai-chat-completions-sse",
+    "warmupRounds": 1
+  },
+  "artifactType": "model-bench-quality-reference",
+  "notes": [
+    "Retained AR completion hashes and execution-consistency evidence, without performance timings. Reuse for DFlash2 quality checks; refresh when target arithmetic, weights, tokenizer or request settings change."
+  ],
+  "results": {
+    "c1": {
+      "completionExactness": {
+        "comparedCases": 9,
+        "comparedRequests": 9,
+        "exactRate": 0.3333333333333333,
+        "exactRequests": 3,
+        "matchedCases": 3,
+        "matchedRounds": 3
+      },
+      "cases": {
+        "chinese_explanation": {
+          "completionHashes": [
+            "5d9a1d0fb05e0b93f53c79f46005b02a45d962e42fa77c6d4b0983c79e870ef2"
+          ]
+        },
+        "cpp_ring_buffer": {
+          "completionHashes": [
+            "44168ec6cf4f31295bf6727a9fec7b93b9529574606bf33943b03c72a9bd8a5c"
+          ]
+        },
+        "creative_station": {
+          "completionHashes": [
+            "32eb7ac862ead9d6dd1be22bfea2cc5fa7403ea5d01c79528e49b27cde7b8c77"
+          ]
+        },
+        "expository_pangram": {
+          "completionHashes": [
+            "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+          ]
+        },
+        "instruction_debug": {
+          "completionHashes": [
+            "31715c3bd450f91ddb3ca55e89a3a4716330ae91458e78eda0a657808eaf4d53"
+          ]
+        },
+        "italian_explanation": {
+          "completionHashes": [
+            "be848cb141b559bd645cb5a73fc642366b3971c0ff17e40ebd325378c6731a34"
+          ]
+        },
+        "json_schedule": {
+          "completionHashes": [
+            "430ad9700d60f7e21320d4e34672683dc6310b528c93267bb45896991707d106"
+          ]
+        },
+        "reasoning_train": {
+          "completionHashes": [
+            "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+          ]
+        },
+        "summary_gpu": {
+          "completionHashes": [
+            "d0f69ccc74fa72e05be266250d3fed85f3773683d459313ff90e1d14fa5adc2b"
+          ]
+        }
+      },
+      "samples": [
+        {
+          "case_id": "expository_pangram",
+          "completion_tokens": 128,
+          "completion_sha256": "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+        },
+        {
+          "case_id": "cpp_ring_buffer",
+          "completion_tokens": 128,
+          "completion_sha256": "44168ec6cf4f31295bf6727a9fec7b93b9529574606bf33943b03c72a9bd8a5c"
+        },
+        {
+          "case_id": "reasoning_train",
+          "completion_tokens": 128,
+          "completion_sha256": "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+        },
+        {
+          "case_id": "summary_gpu",
+          "completion_tokens": 35,
+          "completion_sha256": "d0f69ccc74fa72e05be266250d3fed85f3773683d459313ff90e1d14fa5adc2b"
+        },
+        {
+          "case_id": "italian_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "be848cb141b559bd645cb5a73fc642366b3971c0ff17e40ebd325378c6731a34"
+        },
+        {
+          "case_id": "chinese_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "5d9a1d0fb05e0b93f53c79f46005b02a45d962e42fa77c6d4b0983c79e870ef2"
+        },
+        {
+          "case_id": "json_schedule",
+          "completion_tokens": 128,
+          "completion_sha256": "430ad9700d60f7e21320d4e34672683dc6310b528c93267bb45896991707d106"
+        },
+        {
+          "case_id": "creative_station",
+          "completion_tokens": 128,
+          "completion_sha256": "32eb7ac862ead9d6dd1be22bfea2cc5fa7403ea5d01c79528e49b27cde7b8c77"
+        },
+        {
+          "case_id": "instruction_debug",
+          "completion_tokens": 128,
+          "completion_sha256": "31715c3bd450f91ddb3ca55e89a3a4716330ae91458e78eda0a657808eaf4d53"
+        }
+      ]
+    },
+    "c2": {
+      "completionExactness": {
+        "comparedCases": 9,
+        "comparedRequests": 10,
+        "exactRate": 0.5,
+        "exactRequests": 5,
+        "matchedCases": 4,
+        "matchedRounds": 1
+      },
+      "cases": {
+        "chinese_explanation": {
+          "completionHashes": [
+            "5d9a1d0fb05e0b93f53c79f46005b02a45d962e42fa77c6d4b0983c79e870ef2"
+          ]
+        },
+        "cpp_ring_buffer": {
+          "completionHashes": [
+            "44168ec6cf4f31295bf6727a9fec7b93b9529574606bf33943b03c72a9bd8a5c"
+          ]
+        },
+        "creative_station": {
+          "completionHashes": [
+            "920c602ef2e9b44dccdb8ac1e575bf26ea9e5295fc78ec2e9670c332cd84741a"
+          ]
+        },
+        "expository_pangram": {
+          "completionHashes": [
+            "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+          ]
+        },
+        "instruction_debug": {
+          "completionHashes": [
+            "fc0ffeb1933e57e4bf4979caa74f6782d01c39ae26d15855d370c720a01df8e5"
+          ]
+        },
+        "italian_explanation": {
+          "completionHashes": [
+            "32d2d08118d4884222b098facea60e72476e4681782caec643f15d7dd888da84"
+          ]
+        },
+        "json_schedule": {
+          "completionHashes": [
+            "430ad9700d60f7e21320d4e34672683dc6310b528c93267bb45896991707d106"
+          ]
+        },
+        "reasoning_train": {
+          "completionHashes": [
+            "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+          ]
+        },
+        "summary_gpu": {
+          "completionHashes": [
+            "d0f69ccc74fa72e05be266250d3fed85f3773683d459313ff90e1d14fa5adc2b"
+          ]
+        }
+      },
+      "samples": [
+        {
+          "case_id": "expository_pangram",
+          "completion_tokens": 128,
+          "completion_sha256": "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+        },
+        {
+          "case_id": "cpp_ring_buffer",
+          "completion_tokens": 128,
+          "completion_sha256": "44168ec6cf4f31295bf6727a9fec7b93b9529574606bf33943b03c72a9bd8a5c"
+        },
+        {
+          "case_id": "reasoning_train",
+          "completion_tokens": 128,
+          "completion_sha256": "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+        },
+        {
+          "case_id": "summary_gpu",
+          "completion_tokens": 35,
+          "completion_sha256": "d0f69ccc74fa72e05be266250d3fed85f3773683d459313ff90e1d14fa5adc2b"
+        },
+        {
+          "case_id": "italian_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "32d2d08118d4884222b098facea60e72476e4681782caec643f15d7dd888da84"
+        },
+        {
+          "case_id": "chinese_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "5d9a1d0fb05e0b93f53c79f46005b02a45d962e42fa77c6d4b0983c79e870ef2"
+        },
+        {
+          "case_id": "json_schedule",
+          "completion_tokens": 128,
+          "completion_sha256": "430ad9700d60f7e21320d4e34672683dc6310b528c93267bb45896991707d106"
+        },
+        {
+          "case_id": "creative_station",
+          "completion_tokens": 128,
+          "completion_sha256": "920c602ef2e9b44dccdb8ac1e575bf26ea9e5295fc78ec2e9670c332cd84741a"
+        },
+        {
+          "case_id": "instruction_debug",
+          "completion_tokens": 128,
+          "completion_sha256": "fc0ffeb1933e57e4bf4979caa74f6782d01c39ae26d15855d370c720a01df8e5"
+        },
+        {
+          "case_id": "expository_pangram",
+          "completion_tokens": 128,
+          "completion_sha256": "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+        }
+      ]
+    },
+    "c4": {
+      "completionExactness": {
+        "comparedCases": 9,
+        "comparedRequests": 12,
+        "exactRate": 0.6666666666666666,
+        "exactRequests": 8,
+        "matchedCases": 5,
+        "matchedRounds": 0
+      },
+      "cases": {
+        "chinese_explanation": {
+          "completionHashes": [
+            "5d9a1d0fb05e0b93f53c79f46005b02a45d962e42fa77c6d4b0983c79e870ef2"
+          ]
+        },
+        "cpp_ring_buffer": {
+          "completionHashes": [
+            "30cd4aedf90241296025b7f83dab151edd295a2eab0bd81debfb033fc1e8f159"
+          ]
+        },
+        "creative_station": {
+          "completionHashes": [
+            "32eb7ac862ead9d6dd1be22bfea2cc5fa7403ea5d01c79528e49b27cde7b8c77"
+          ]
+        },
+        "expository_pangram": {
+          "completionHashes": [
+            "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+          ]
+        },
+        "instruction_debug": {
+          "completionHashes": [
+            "a3b048aac186c44b73b101bff3928489d5ff129945221f3c26c252e9adf1221e"
+          ]
+        },
+        "italian_explanation": {
+          "completionHashes": [
+            "32d2d08118d4884222b098facea60e72476e4681782caec643f15d7dd888da84"
+          ]
+        },
+        "json_schedule": {
+          "completionHashes": [
+            "c7bdb486ab99eba458d297fe94b95127d55133d55ee82820151df471dba0889f"
+          ]
+        },
+        "reasoning_train": {
+          "completionHashes": [
+            "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+          ]
+        },
+        "summary_gpu": {
+          "completionHashes": [
+            "d0f69ccc74fa72e05be266250d3fed85f3773683d459313ff90e1d14fa5adc2b"
+          ]
+        }
+      },
+      "samples": [
+        {
+          "case_id": "expository_pangram",
+          "completion_tokens": 128,
+          "completion_sha256": "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+        },
+        {
+          "case_id": "cpp_ring_buffer",
+          "completion_tokens": 128,
+          "completion_sha256": "30cd4aedf90241296025b7f83dab151edd295a2eab0bd81debfb033fc1e8f159"
+        },
+        {
+          "case_id": "reasoning_train",
+          "completion_tokens": 128,
+          "completion_sha256": "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+        },
+        {
+          "case_id": "summary_gpu",
+          "completion_tokens": 35,
+          "completion_sha256": "d0f69ccc74fa72e05be266250d3fed85f3773683d459313ff90e1d14fa5adc2b"
+        },
+        {
+          "case_id": "italian_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "32d2d08118d4884222b098facea60e72476e4681782caec643f15d7dd888da84"
+        },
+        {
+          "case_id": "chinese_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "5d9a1d0fb05e0b93f53c79f46005b02a45d962e42fa77c6d4b0983c79e870ef2"
+        },
+        {
+          "case_id": "json_schedule",
+          "completion_tokens": 128,
+          "completion_sha256": "c7bdb486ab99eba458d297fe94b95127d55133d55ee82820151df471dba0889f"
+        },
+        {
+          "case_id": "creative_station",
+          "completion_tokens": 128,
+          "completion_sha256": "32eb7ac862ead9d6dd1be22bfea2cc5fa7403ea5d01c79528e49b27cde7b8c77"
+        },
+        {
+          "case_id": "instruction_debug",
+          "completion_tokens": 128,
+          "completion_sha256": "a3b048aac186c44b73b101bff3928489d5ff129945221f3c26c252e9adf1221e"
+        },
+        {
+          "case_id": "expository_pangram",
+          "completion_tokens": 128,
+          "completion_sha256": "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+        },
+        {
+          "case_id": "cpp_ring_buffer",
+          "completion_tokens": 128,
+          "completion_sha256": "30cd4aedf90241296025b7f83dab151edd295a2eab0bd81debfb033fc1e8f159"
+        },
+        {
+          "case_id": "reasoning_train",
+          "completion_tokens": 128,
+          "completion_sha256": "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+        }
+      ]
+    },
+    "c6": {
+      "completionExactness": {
+        "comparedCases": 9,
+        "comparedRequests": 12,
+        "exactRate": 0.6666666666666666,
+        "exactRequests": 8,
+        "matchedCases": 5,
+        "matchedRounds": 0
+      },
+      "cases": {
+        "chinese_explanation": {
+          "completionHashes": [
+            "5d9a1d0fb05e0b93f53c79f46005b02a45d962e42fa77c6d4b0983c79e870ef2"
+          ]
+        },
+        "cpp_ring_buffer": {
+          "completionHashes": [
+            "30cd4aedf90241296025b7f83dab151edd295a2eab0bd81debfb033fc1e8f159"
+          ]
+        },
+        "creative_station": {
+          "completionHashes": [
+            "32eb7ac862ead9d6dd1be22bfea2cc5fa7403ea5d01c79528e49b27cde7b8c77"
+          ]
+        },
+        "expository_pangram": {
+          "completionHashes": [
+            "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+          ]
+        },
+        "instruction_debug": {
+          "completionHashes": [
+            "db6d29bdeff0df62c3b156e2b4051b0403662e7b22f064d1add3e376a9ffecfe"
+          ]
+        },
+        "italian_explanation": {
+          "completionHashes": [
+            "32d2d08118d4884222b098facea60e72476e4681782caec643f15d7dd888da84"
+          ]
+        },
+        "json_schedule": {
+          "completionHashes": [
+            "430ad9700d60f7e21320d4e34672683dc6310b528c93267bb45896991707d106"
+          ]
+        },
+        "reasoning_train": {
+          "completionHashes": [
+            "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+          ]
+        },
+        "summary_gpu": {
+          "completionHashes": [
+            "d0f69ccc74fa72e05be266250d3fed85f3773683d459313ff90e1d14fa5adc2b"
+          ]
+        }
+      },
+      "samples": [
+        {
+          "case_id": "expository_pangram",
+          "completion_tokens": 128,
+          "completion_sha256": "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+        },
+        {
+          "case_id": "cpp_ring_buffer",
+          "completion_tokens": 128,
+          "completion_sha256": "30cd4aedf90241296025b7f83dab151edd295a2eab0bd81debfb033fc1e8f159"
+        },
+        {
+          "case_id": "reasoning_train",
+          "completion_tokens": 128,
+          "completion_sha256": "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+        },
+        {
+          "case_id": "summary_gpu",
+          "completion_tokens": 35,
+          "completion_sha256": "d0f69ccc74fa72e05be266250d3fed85f3773683d459313ff90e1d14fa5adc2b"
+        },
+        {
+          "case_id": "italian_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "32d2d08118d4884222b098facea60e72476e4681782caec643f15d7dd888da84"
+        },
+        {
+          "case_id": "chinese_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "5d9a1d0fb05e0b93f53c79f46005b02a45d962e42fa77c6d4b0983c79e870ef2"
+        },
+        {
+          "case_id": "json_schedule",
+          "completion_tokens": 128,
+          "completion_sha256": "430ad9700d60f7e21320d4e34672683dc6310b528c93267bb45896991707d106"
+        },
+        {
+          "case_id": "creative_station",
+          "completion_tokens": 128,
+          "completion_sha256": "32eb7ac862ead9d6dd1be22bfea2cc5fa7403ea5d01c79528e49b27cde7b8c77"
+        },
+        {
+          "case_id": "instruction_debug",
+          "completion_tokens": 128,
+          "completion_sha256": "db6d29bdeff0df62c3b156e2b4051b0403662e7b22f064d1add3e376a9ffecfe"
+        },
+        {
+          "case_id": "expository_pangram",
+          "completion_tokens": 128,
+          "completion_sha256": "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+        },
+        {
+          "case_id": "cpp_ring_buffer",
+          "completion_tokens": 128,
+          "completion_sha256": "30cd4aedf90241296025b7f83dab151edd295a2eab0bd81debfb033fc1e8f159"
+        },
+        {
+          "case_id": "reasoning_train",
+          "completion_tokens": 128,
+          "completion_sha256": "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+        }
+      ]
+    },
+    "c8": {
+      "completionExactness": {
+        "comparedCases": 9,
+        "comparedRequests": 16,
+        "exactRate": 0.6875,
+        "exactRequests": 11,
+        "matchedCases": 4,
+        "matchedRounds": 0
+      },
+      "cases": {
+        "chinese_explanation": {
+          "completionHashes": [
+            "5d9a1d0fb05e0b93f53c79f46005b02a45d962e42fa77c6d4b0983c79e870ef2"
+          ]
+        },
+        "cpp_ring_buffer": {
+          "completionHashes": [
+            "30cd4aedf90241296025b7f83dab151edd295a2eab0bd81debfb033fc1e8f159",
+            "44168ec6cf4f31295bf6727a9fec7b93b9529574606bf33943b03c72a9bd8a5c"
+          ]
+        },
+        "creative_station": {
+          "completionHashes": [
+            "32eb7ac862ead9d6dd1be22bfea2cc5fa7403ea5d01c79528e49b27cde7b8c77"
+          ]
+        },
+        "expository_pangram": {
+          "completionHashes": [
+            "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+          ]
+        },
+        "instruction_debug": {
+          "completionHashes": [
+            "31715c3bd450f91ddb3ca55e89a3a4716330ae91458e78eda0a657808eaf4d53"
+          ]
+        },
+        "italian_explanation": {
+          "completionHashes": [
+            "32d2d08118d4884222b098facea60e72476e4681782caec643f15d7dd888da84"
+          ]
+        },
+        "json_schedule": {
+          "completionHashes": [
+            "64a84e99168b174431708bdf82457548c1aa3e7879a826fc85b31cdc8df97480",
+            "c7bdb486ab99eba458d297fe94b95127d55133d55ee82820151df471dba0889f"
+          ]
+        },
+        "reasoning_train": {
+          "completionHashes": [
+            "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+          ]
+        },
+        "summary_gpu": {
+          "completionHashes": [
+            "35d149686ab018d17219047d43c9483acf2bf21e66ef357fffbd26a8d1474cde",
+            "d0f69ccc74fa72e05be266250d3fed85f3773683d459313ff90e1d14fa5adc2b"
+          ]
+        }
+      },
+      "samples": [
+        {
+          "case_id": "expository_pangram",
+          "completion_tokens": 128,
+          "completion_sha256": "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+        },
+        {
+          "case_id": "cpp_ring_buffer",
+          "completion_tokens": 128,
+          "completion_sha256": "30cd4aedf90241296025b7f83dab151edd295a2eab0bd81debfb033fc1e8f159"
+        },
+        {
+          "case_id": "reasoning_train",
+          "completion_tokens": 128,
+          "completion_sha256": "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+        },
+        {
+          "case_id": "summary_gpu",
+          "completion_tokens": 35,
+          "completion_sha256": "35d149686ab018d17219047d43c9483acf2bf21e66ef357fffbd26a8d1474cde"
+        },
+        {
+          "case_id": "italian_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "32d2d08118d4884222b098facea60e72476e4681782caec643f15d7dd888da84"
+        },
+        {
+          "case_id": "chinese_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "5d9a1d0fb05e0b93f53c79f46005b02a45d962e42fa77c6d4b0983c79e870ef2"
+        },
+        {
+          "case_id": "json_schedule",
+          "completion_tokens": 128,
+          "completion_sha256": "c7bdb486ab99eba458d297fe94b95127d55133d55ee82820151df471dba0889f"
+        },
+        {
+          "case_id": "creative_station",
+          "completion_tokens": 128,
+          "completion_sha256": "32eb7ac862ead9d6dd1be22bfea2cc5fa7403ea5d01c79528e49b27cde7b8c77"
+        },
+        {
+          "case_id": "instruction_debug",
+          "completion_tokens": 128,
+          "completion_sha256": "31715c3bd450f91ddb3ca55e89a3a4716330ae91458e78eda0a657808eaf4d53"
+        },
+        {
+          "case_id": "expository_pangram",
+          "completion_tokens": 128,
+          "completion_sha256": "27c5becfc3161ccfb9eee411e72e02e924900e0bbbe09da0747f459fbc782d16"
+        },
+        {
+          "case_id": "cpp_ring_buffer",
+          "completion_tokens": 128,
+          "completion_sha256": "44168ec6cf4f31295bf6727a9fec7b93b9529574606bf33943b03c72a9bd8a5c"
+        },
+        {
+          "case_id": "reasoning_train",
+          "completion_tokens": 128,
+          "completion_sha256": "6e286858188df36e9c6c9b6e6aad95b68c862d127625bd3a6fbfd2d9eeef4500"
+        },
+        {
+          "case_id": "summary_gpu",
+          "completion_tokens": 35,
+          "completion_sha256": "d0f69ccc74fa72e05be266250d3fed85f3773683d459313ff90e1d14fa5adc2b"
+        },
+        {
+          "case_id": "italian_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "32d2d08118d4884222b098facea60e72476e4681782caec643f15d7dd888da84"
+        },
+        {
+          "case_id": "chinese_explanation",
+          "completion_tokens": 128,
+          "completion_sha256": "5d9a1d0fb05e0b93f53c79f46005b02a45d962e42fa77c6d4b0983c79e870ef2"
+        },
+        {
+          "case_id": "json_schedule",
+          "completion_tokens": 128,
+          "completion_sha256": "64a84e99168b174431708bdf82457548c1aa3e7879a826fc85b31cdc8df97480"
+        }
+      ]
+    }
+  }
+}

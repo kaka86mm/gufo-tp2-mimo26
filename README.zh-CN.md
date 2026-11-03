@@ -6,7 +6,7 @@
 
 模型是 309B 的 MoE，每个 token 激活 15B（专家是 MXFP4）。单台 128 GB 差得远，两台刚刚够——"刚刚够"就是这个仓库的全部主题。现在它同时跑六个 200K token 的会话；冷预填从短提示的 711 tok/s 一路掉到 195K 时的 288 tok/s；服务重启之后，见过的前缀直接从磁盘快照里回来：冷跑要 692 秒的 193K 提示词，7.8 秒就能接着用。
 
-引擎是 [gufo](https://github.com/neuhaus/gufo)（MIT），我在 fork 里加了 MiMo 的移植和不少内核改动，fork 已经开源在 [kaka86mm/gufo-mimo26](https://github.com/kaka86mm/gufo-mimo26)。两台机器之间的链路是另一个仓库 [gufo-tp2-tb4-rdma](https://github.com/kaka86mm/gufo-tp2-tb4-rdma)。这两个是前提，本仓库是其余的东西：启动器、看着服务别死的 supervisor、跑数的脚本，和这些笔记。
+引擎是 [gufo](https://github.com/neuhaus/gufo)（MIT），我在 fork 里加了 MiMo 的移植和不少内核改动，fork 已经开源在 [kaka86mm/gufo-mimo26](https://github.com/kaka86mm/gufo-mimo26)，同一棵树也收录在本仓库的 [`engine/`](engine/) 里。两台机器之间的链路是另一个仓库 [gufo-tp2-tb4-rdma](https://github.com/kaka86mm/gufo-tp2-tb4-rdma)。这两个是前提，本仓库是其余的东西：启动器、看着服务别死的 supervisor、跑数的脚本，和这些笔记。
 
 ## 实测数字
 
@@ -75,7 +75,7 @@ docs/   CONFIGURATION.md       每个 flag / 环境变量：这里的值、默�
 
 1. 先把 RDMA 链路拉起来（按 [gufo-tp2-tb4-rdma](https://github.com/kaka86mm/gufo-tp2-tb4-rdma)），确认引擎日志里出现 `rdma_ready`。这里的脚本都假设两台有 `usb4_rdma0`。
 2. 模型文件在两台放同样路径。主干和 MTP 草稿来自 [`ggml-org/MiMo-V2.6-Flash-RL-GGUF`](https://huggingface.co/ggml-org/MiMo-V2.6-Flash-RL-GGUF)（MIT）；稠密 sidecar（`dense-full-q4_0.gguf`）用引擎里的 `tools/mimo2_requant_dense.py` 生成。命令、大小和预期 md5 见 [REPRODUCE.md](REPRODUCE.md)。改 `run/env.sh` 里的 `MODEL` / `MTP` / `DENSE_SIDECAR`。
-3. 从 [kaka86mm/gufo-mimo26](https://github.com/kaka86mm/gufo-mimo26) 的 tag `mimo2-0.15.0` 构建（`cmake --preset release -DGUFO_ENABLE_TP2_RDMA=ON -DGUFO_MIMO2_HIP=ON && cmake --build --preset release --parallel 8`），把 `build/release/gufo` 放到两台的 `$HOME/gufo-mimo2-bin`。实测二进制 md5 `96e5afcc8d56953f9984e6a4f4e6f79e`；旁边留一份 `gufo-mimo2-bin.port15` 给回滚用。
+3. 从本仓库的 [`engine/`](engine/) 构建（和 `gufo-mimo26` 的 tag `mimo2-0.15.0` 同一棵树）：`cd engine && cmake --preset release -DGUFO_ENABLE_TP2_RDMA=ON -DGUFO_MIMO2_HIP=ON && cmake --build --preset release --parallel 8`。把 `build/release/gufo` 放到两台的 `$HOME/gufo-mimo2-bin`。实测二进制 md5 `96e5afcc8d56953f9984e6a4f4e6f79e`；旁边留一份 `gufo-mimo2-bin.port15` 给回滚用。
 4. 编辑 `run/env.sh`：主机、TP 控制令牌（共享密钥，两台必须一致）、模型路径、两个缓存目录。然后 `SESSIONS=6 CONTEXT=204800 ./run/start-tp2-mimo.sh`。
 5. 交给 systemd：`deploy/mimo-supervisor.service` 改正路径，`systemctl enable --now mimo-supervisor`。之后服务掉线它自己拉。测试窗口里放一个 `/tmp/mimo-no-supervise`，它就完全不插手。
 6. 用脚本自检：先 `./run/bench/perf-accept.sh`（电池、解码、六路、混合、needle、L2 重启证明），再 `./run/bench/prod-full-test.sh`（加预填阶梯、并发预填和十分钟浸泡）。

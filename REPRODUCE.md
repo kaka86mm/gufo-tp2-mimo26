@@ -32,10 +32,13 @@ listening port is not readiness.
 
 ## 1. Engine
 
+The engine is vendored in [`engine/`](engine/) in this repository. The
+standalone [gufo-mimo26](https://github.com/kaka86mm/gufo-mimo26) keeps the
+commit history and the same `mimo2-0.15.0` tag.
+
 ```sh
-git clone https://github.com/kaka86mm/gufo-mimo26
-cd gufo-mimo26
-git checkout mimo2-0.15.0
+git clone https://github.com/kaka86mm/gufo-tp2-mimo26
+cd gufo-tp2-mimo26/engine
 
 # ROCm 7.2.4 at /opt/rocm-7.2.4, plus the gufo build dependencies
 sudo apt install build-essential cmake ninja-build pkg-config \
