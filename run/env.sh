@@ -62,11 +62,13 @@
 
 # --------------------------------------------------------------- disk cache ---
 # One L2 directory per rank, both REAL directories: a symlinked cache dir fails
-# the load outright ("TP disk cache directory: Not a directory") and takes the
-# peer down with tp_pair_lost — see docs/PITFALLS.md. rank1 has no room on its
-# root filesystem, so its cache lives on the data disk; the $HOME symlink kept
-# there is for operators only, the engine never sees it.
-: "${CACHE_DIR_R0:=$HOME/cache-disk}"        # rank0: root filesystem has room
+# the load outright ("TP disk cache directory: Not a directory" or
+# "continuation disk directory is not a private owned directory") and takes the
+# peer down with tp_pair_lost — see docs/PITFALLS.md. If $HOME/cache-disk is a
+# symlink, point CACHE_DIR_R0 at its real target. rank1 has no room on its root
+# filesystem, so its cache lives on the data disk; the $HOME symlink kept there
+# is for operators only, the engine never sees it.
+: "${CACHE_DIR_R0:=$HOME/cache-disk}"        # rank0: real directory, not a symlink
 : "${CACHE_DIR_R1:=/mnt/data1t/cache-disk}"  # rank1: data disk, real path
 
 # --------------------------------------------------------------------- logs ---
