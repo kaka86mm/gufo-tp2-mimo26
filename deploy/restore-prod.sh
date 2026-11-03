@@ -21,7 +21,7 @@ PAT='gufo-.*serve.*--tp-ran''k'
 
 RANK1=${RANK1:-matri@192.168.110.44}
 BIN=${BIN:-$HOME/gufo-mimo2-bin}
-KEEP=${KEEP:-$BIN.splitk}
+KEEP=${KEEP:-$BIN.port15}
 # Liveness must anchor on the binary path: an unrelated command line that
 # merely contains "gufo-...serve" would otherwise look like a live rank.
 CHECK_PAT="^$BIN serve"
