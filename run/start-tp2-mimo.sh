@@ -68,12 +68,12 @@ ssh -o BatchMode=yes $RANK1 'docker stop gufo-u >/dev/null 2>&1 || true'
 # Anchor the liveness check on the binary path: an unrelated command line that
 # merely contains "gufo-...serve" must not look like a live rank (that blocked
 # a production restore on 2026-10-08: the start aborted, service stayed down).
-pgrep -f '^/home/matri/gufo-mimo2-bin serve' >/dev/null && { echo "!! rank0 still alive"; pgrep -af '^/home/matri/gufo-mimo2-bin serve'; exit 1; }
+pgrep -f "^${BIN} serve" >/dev/null && { echo "!! rank0 still alive"; pgrep -af "^${BIN} serve"; exit 1; }
 
 rm -f $LOGDIR/mimo-rank0.log $LOGDIR/mimo-rank1.log
 
 echo "== rank0 =="
-setsid nohup env GUFO_NO_GRAPH=1 GUFO_MIMO_DENSE_SC=$DENSE_SIDECAR GPU_MAX_HW_QUEUES=1 GUFO_AR_F16=1 HIP_VISIBLE_DEVICES=0 LD_LIBRARY_PATH=/opt/rocm-7.2.4/lib:/home/matri/gufo-libs \
+setsid nohup env GUFO_NO_GRAPH=1 GUFO_MIMO_DENSE_SC=$DENSE_SIDECAR GPU_MAX_HW_QUEUES=1 GUFO_AR_F16=1 GUFO_TOOLS_FREEFORM=1 GUFO_MTP_COST_SCALE=0.80 GUFO_MTP_ACCEPT_DECAY=0.9 GUFO_MTP_RETRY_TOKENS=4 HIP_VISIBLE_DEVICES=0 LD_LIBRARY_PATH=/opt/rocm-7.2.4/lib:/home/matri/gufo-libs \
   $BIN serve llm \
   --model "$MODEL" \
   --speculative mtp --mtp-model "$MTP" \
@@ -81,7 +81,7 @@ setsid nohup env GUFO_NO_GRAPH=1 GUFO_MIMO_DENSE_SC=$DENSE_SIDECAR GPU_MAX_HW_QU
   --tp-bootstrap-port 18525 --tp-control-port 18526 --tp-control-token "$TOKEN" \
   --tp-rdma-device usb4_rdma0 \
   --host 0.0.0.0 --port 8080 \
-  --max-pending-per-client 16 --prefill-chunk 64 --sessions $SESSIONS --context $CONTEXT \
+  --max-pending-per-client 16 --prefill-chunk 2048 --sessions $SESSIONS --context $CONTEXT \
   --cache-disk $CACHE_DIR_R0 --cache-disk-bytes $DISK_BYTES \
   --cache-ram-bytes $RAM_BYTES \
   --cache-disk-staging-bytes $STAGE_BYTES \
@@ -94,7 +94,7 @@ done
 ss -tln | grep -q 18525 || { echo "!! rank0 bootstrap port never came up:"; tail -20 $LOGDIR/mimo-rank0.log; exit 1; }
 
 echo "== rank1 ($RANK1) =="
-ssh -o BatchMode=yes $RANK1 "sg render -c 'mkdir -p "$LOGDIR"; setsid nohup env GUFO_NO_GRAPH=1 GUFO_MIMO_DENSE_SC=$DENSE_SIDECAR GPU_MAX_HW_QUEUES=1 GUFO_AR_F16=1 HIP_VISIBLE_DEVICES=0 LD_LIBRARY_PATH=/opt/rocm-7.2.4/lib:/home/matri/gufo-libs \
+ssh -o BatchMode=yes $RANK1 "sg render -c 'mkdir -p "$LOGDIR"; setsid nohup env GUFO_NO_GRAPH=1 GUFO_MIMO_DENSE_SC=$DENSE_SIDECAR GPU_MAX_HW_QUEUES=1 GUFO_AR_F16=1 GUFO_TOOLS_FREEFORM=1 GUFO_MTP_COST_SCALE=0.80 GUFO_MTP_ACCEPT_DECAY=0.9 GUFO_MTP_RETRY_TOKENS=4 HIP_VISIBLE_DEVICES=0 LD_LIBRARY_PATH=/opt/rocm-7.2.4/lib:/home/matri/gufo-libs \
   $BIN serve llm \
   --model $MODEL \
   --speculative mtp --mtp-model $MTP \
@@ -103,11 +103,11 @@ ssh -o BatchMode=yes $RANK1 "sg render -c 'mkdir -p "$LOGDIR"; setsid nohup env 
   --tp-bootstrap-port 18525 --tp-control-port 18526 --tp-control-token \"$TOKEN\" \
   --tp-rdma-device usb4_rdma0 \
   --host 0.0.0.0 --port 8081 \
-  --max-pending-per-client 16 --prefill-chunk 64 --sessions $SESSIONS --context $CONTEXT \
+  --max-pending-per-client 16 --prefill-chunk 2048 --sessions $SESSIONS --context $CONTEXT \
   --cache-disk $CACHE_DIR_R1 --cache-disk-bytes $DISK_BYTES \
   --cache-ram-bytes $RAM_BYTES \
   --cache-disk-staging-bytes $STAGE_BYTES \
-  > $LOGDIR/mimo-rank1.log 2>&1 < /dev/null'"
+  > $LOGDIR/mimo-rank1.log 2>&1 < /dev/null &'"
 
 echo "== waiting for RDMA handshake / model load =="
 for i in $(seq 1 120); do
