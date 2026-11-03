@@ -44,12 +44,12 @@ sudo apt install build-essential cmake ninja-build pkg-config \
   libavutil-dev libswscale-dev ffmpeg libibverbs-dev \
   hipblas-dev hipblaslt-dev rocblas-dev hipcub-dev rocprim-dev rocwmma-dev
 
-cmake --preset release -DGUFO_ENABLE_TP2_RDMA=ON
+cmake --preset release -DGUFO_ENABLE_TP2_RDMA=ON -DGUFO_MIMO2_HIP=ON
 cmake --build --preset release --parallel 8
 ./build/release/gufo diagnose
 ```
 
-Copy `build/release/gufo` to `$HOME/gufo-mimo2-bin` on both hosts. The measured
+Both flags are required: `GUFO_MIMO2_HIP` defaults to OFF, and without it the link fails on every `mimo2` symbol. Copy `build/release/gufo` to `$HOME/gufo-mimo2-bin` on both hosts. The measured
 production binary is md5 `96e5afcc8d56953f9984e6a4f4e6f79e` (303,330,824 B).
 A rebuild in a different directory is not byte-identical — `RelWithDebInfo`
 embeds source paths — but it is the same code. Keep a pinned copy on both hosts:
