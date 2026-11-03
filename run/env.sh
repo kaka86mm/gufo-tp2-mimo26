@@ -43,7 +43,7 @@
 
 # ------------------------------------------------------------------- binary ---
 : "${BIN:=/home/matri/gufo-mimo2-bin}"        # engine binary, same path on both hosts
-: "${KEEP_BIN:=$HOME/gufo-mimo2-bin.splitk}"  # pinned rollback copy that deploy/restore-prod.sh
+: "${KEEP_BIN:=$HOME/gufo-mimo2-bin.port15}"  # pinned rollback copy that deploy/restore-prod.sh
                                               # puts back; its KEEP= line spells this path out
                                               # (keep the two in sync when you promote a build)
 
